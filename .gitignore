@@ -51,8 +51,12 @@ logs/
 *.sqlite3
 data/
 !data/.gitkeep
-models/
+models/ 
 !models/.gitkeep
+# Keep project code in `src/models/` tracked (do not ignore)
+!src/models/
+!src/models/**
+src/**/__pycache__/
 
 # open source Git Submodule
 src/ingestion/libs/**/__pycache__/

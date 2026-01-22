@@ -13,15 +13,18 @@ class Settings(BaseSettings):
 
     # Qdrant Settings
     QDRANT_HOST: str = "localhost"
-    QDRANT_PORT: int = 6333
+    QDRANT_PORT: int = 16333
     QDRANT_URL: Optional[str] = Field(default=None) # Optional if user wants to provide full URL
     QDRANT_COLLECTION_NAME: str = "technical_docs"
     
     # Model Settings
     LLM_MODEL_NAME: str = "deepseek-v3.2"
     # Logical name (path resolution is handled in embedding.py)
-    EMBEDDING_MODEL_NAME: str = "BAAI/bge-m3"
-    RERANKER_MODEL_NAME: str = "BAAI/bge-reranker-large"
+    EMBEDDING_MODEL_NAME: str = "models/bge-m3"  # ["models/bge-m3", "models/bge-m3-onnx"]
+    RERANKER_MODEL_NAME: str = "bge-reranker-large"
+
+    # Pix2Text model directory (relative to project root or absolute path)
+    PIX2TEXT_HOME: str = Field("models/pix2text", validation_alias="PIX2TEXT_HOME")
     
     # Text Splitting Settings
     CHUNK_SIZE: int = 512
