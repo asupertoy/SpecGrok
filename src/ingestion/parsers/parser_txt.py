@@ -5,8 +5,8 @@ from typing import List, Dict, Any, Tuple
 from pathlib import Path
 
 from llama_index.core.readers.base import BaseReader
-from llama_index.core.schema import TextNode
-from ingestion.loaders import Blob
+from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo
+from src.ingestion.loaders import Blob
 
 
 class TextParser(BaseReader):
@@ -100,6 +100,8 @@ class TextParser(BaseReader):
         """
         降噪：去除无意义的控制字符、多余的空白行、统一换行符（CRLF to LF）、无效标记等。
 
+        另外：如果配置了 `merge_short_lines`，会合并短行以恢复被硬换行分割的句子。
+
         Args:
             text (str): 原始文本。
 
@@ -117,6 +119,91 @@ class TextParser(BaseReader):
 
         # 去除无效标记（类似MarkdownParser的_clean_placeholders）
         text = self._clean_placeholders(text)
+
+        # 合并短行（可选，支持自适应阈值或配置阈值）
+        if self.merge_short_lines:
+            lines = text.split('\n')
+
+            # 阈值优先来自配置，否则根据文本行长度中位数自适应计算
+            threshold = self.config.get('merge_short_line_threshold')
+            if threshold is None:
+                import statistics
+                lengths = [len(l.strip()) for l in lines if l.strip()]
+                if lengths:
+                    median_len = int(statistics.median(lengths))
+                    # 使用中位数的 0.7 倍作为短行阈值，限制在 [30, 200] 区间
+                    threshold = max(30, min(200, int(median_len * 0.7)))
+                else:
+                    threshold = 80  # 回退默认值
+
+            merged_lines: List[str] = []
+            current = ''
+            in_code_block = False # 状态标记：是否在代码块内
+
+            for line in lines:
+                # 获取去除首尾空格的版本用于判断，但保留原行 line 用于代码块
+                s = line.strip()
+
+                # --- 1. 代码块保护逻辑 ---
+                # 检测代码块边界 (```)
+                if s.startswith('```'):
+                    # 如果有正在累积的普通文本，先结算
+                    if current:
+                        merged_lines.append(current.strip())
+                        current = ''
+                    
+                    # 切换状态，并按原样保留该行（保留缩进）
+                    in_code_block = not in_code_block
+                    merged_lines.append(line.rstrip()) # 仅去除右侧换行符，保留左侧缩进
+                    continue
+                
+                # 如果在代码块内，直接按原样保留，不做合并也不做 strip
+                if in_code_block:
+                    merged_lines.append(line.rstrip())
+                    continue
+                
+                # --- 以下为普通文本处理逻辑 ---
+
+                # 保持段落分隔（空行）
+                if not s:
+                    if current:
+                        merged_lines.append(current.strip())
+                        current = ''
+                    merged_lines.append('')
+                    continue
+
+                # 如果行看起来像列表项或标题，作为新行处理
+                # 表格行 (s.startswith('|')) 也在此处被保护，不参与合并
+                if re.match(r'^(\d+\.|\-|\*|\+|•)\s', s) or self._is_potential_header(s) or s.startswith('|'):
+                    if current:
+                        merged_lines.append(current.strip())
+                        current = ''
+                    merged_lines.append(s)
+                    continue
+
+                # 合并逻辑：短行且前一段未以标点结束则合并
+                if not current:
+                    current = s
+                else:
+                    # 连字符断行处理（例如 commu-\nnication）
+                    if current.endswith('-'):
+                        current = current[:-1] + s
+                    # 若当前行短且前一行不以结束标点结束，则合并
+                    # 不把逗号视作句子终止符，允许以逗号结尾的行继续合并
+                    elif len(s) < threshold and not re.search(r'[。\.\!\?！\?：;；:]$', current):
+                        current = current + ' ' + s
+                    else:
+                        merged_lines.append(current.strip())
+                        current = s
+
+            if current:
+                merged_lines.append(current.strip())
+
+            # 重建文本，保留空行作为段落分隔
+            text = '\n'.join(merged_lines)
+
+            # 再次简化多余空白行
+            text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
 
         return text.strip()
 
@@ -160,13 +247,35 @@ class TextParser(BaseReader):
         if re.match(r'^[IVXLCDM]+\.\s', line):
             return True
 
-        # 短行且包含数字，且不像是列表项（不以数字.开头）
-        if len(line) < 50 and re.search(r'\d+', line) and not re.match(r'^\d+\.', line):
+        # Markdown 风格标题 (兼容在TXT中写MD的情况)
+        if re.match(r'^#+\s', line):
+            return True
+
+        # [Removed] 短行且包含数字的规则过于宽泛，容易误判包含公式或年份的普通句子
+        # 替代方案：匹配以数字开头的标题格式 (如 "1.1 背景")
+        if len(line) < 50 and re.match(r'^\d+(\.\d+)*\s', line):
             return True
 
         # 其他潜在标题：以大写字母开头的短行，或包含特定关键词
         if len(line) < 30 and re.match(r'^[A-Z]', line):
             return True
+
+        # 中文标题：短行，包含中文字符，可能以章节关键词开头
+        if len(line) <= 25 and re.search(r'[\u4e00-\u9fff]', line):
+            # 检查是否包含章节关键词（作为词干或行首）
+            chapter_keywords = ['章', '节', '部分', '小结', '概述', '前言', '后记', '目录', '摘要']
+            if any(line.startswith(keyword) or f'{keyword} ' in line for keyword in chapter_keywords):
+                return True
+            # 或者检查特定标题模式（关键词后跟空格或行结束，且行不包含标点）
+            title_patterns = ['主要', '功能', '特性', '方法', '结果', '讨论', '结论']
+            for pattern in title_patterns:
+                if pattern in line:
+                    # 检查pattern后是否跟空格或行结束，且行不包含句子标点
+                    idx = line.find(pattern)
+                    if idx >= 0:
+                        after_pattern = line[idx + len(pattern):]
+                        if (not after_pattern or after_pattern.startswith(' ')) and not re.search(r'[。！？，、；：]', line):
+                            return True
 
         return False
 
@@ -312,4 +421,14 @@ class TextParser(BaseReader):
         line_count = len(text.split('\n'))
         base_metadata['line_range'] = f"1-{line_count}"
 
-        return TextNode(text=text, metadata=base_metadata)
+        node = TextNode(text=text, metadata=base_metadata)
+        
+        # [Fix] 设置 Source 关系指向原始文件 (blob.source)
+        # 这确保了后续 Chunking 阶段生成的子节点能通过 ref_doc_id 关联回文件路径，
+        # 从而保证 IndexManager.delete_by_doc_id(path) 能正确删除相关向量。
+        node.relationships[NodeRelationship.SOURCE] = RelatedNodeInfo(
+            node_id=blob.source,
+            metadata={"file_name": base_metadata.get("file_name")}
+        )
+        
+        return node

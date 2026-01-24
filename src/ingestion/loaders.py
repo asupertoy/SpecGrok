@@ -2,6 +2,7 @@ from typing import Optional, Dict, List, Union
 from pathlib import Path
 import mimetypes
 import os
+import hashlib
 
 class Blob:
     """即插即用的简单数据容器"""
@@ -26,6 +27,7 @@ class Blob:
             "size": stats.st_size,
             "file_size": stats.st_size,
             "file_name": os.path.basename(file_path),
+            "file_hash": hashlib.md5(data).hexdigest(),  # Early computation of hash
             "extension": os.path.splitext(file_path)[1].lower(),
             # 兼容 mimetypes
             "mime_type": mimetypes.guess_type(file_path)[0]

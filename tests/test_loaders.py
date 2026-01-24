@@ -24,6 +24,11 @@ def test_load_file(tmp_path):
     assert b.as_bytes() == data
     assert b.source == str(p)
     assert b.metadata["size"] == len(data)
+    # [Added] Verify file_hash computation
+    import hashlib
+    expected_hash = hashlib.md5(data).hexdigest()
+    assert b.metadata.get("file_hash") == expected_hash, f"Hash mismatch: {b.metadata.get('file_hash')} != {expected_hash}"
+
     assert b.metadata.get("mime_type") == mimetypes.guess_type(str(p))[0]
 
 

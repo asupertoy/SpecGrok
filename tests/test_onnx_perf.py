@@ -25,12 +25,39 @@ sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_AL
 ort_session = ort.InferenceSession(onnx_path, sess_options, providers=['CPUExecutionProvider'])
 
 # Test Data
+# Test Data - Enhanced to test BGE-M3's dense, sparse, and multi-vector capabilities
 texts = [
-    "The quick brown fox jumps over the lazy dog.",
-    "BGE M3 is an embedding model supporting dense, sparse and colbert retrieval.",
-    "奇迹行者，还在刷野，去看一眼呀！",
-    "今天天气不错，适合出去游玩。",
-    "Technical documentation regarding the SpecGrok project."
+    # 1. 复杂语义和实体混合 - 测试稀疏向量(关键词提取)和稠密向量(语义理解)
+    "量子纠缠的超距作用挑战了经典物理学的局域实在性假设，而薛定谔的猫实验则揭示了量子叠加态的哲学困境，这促使哥本哈根解释与多世界诠释之间的激烈争论。",
+    
+    # 2. 多重专业术语混合 - 测试稀疏向量的关键词权重分配
+    "Transformer架构中的多头注意力机制通过残差连接和层归一化优化梯度流动，结合BERT的掩码语言建模和GPT的自回归生成范式，实现了跨模态的预训练-微调范式迁移。",
+    
+    # 3. 长文档上下文和核心概念分散 - 测试ColBERT的细粒度匹配
+    """在微服务架构的演进过程中，服务网格（Service Mesh）如Istio和Linkerd通过边车代理模式解耦了业务逻辑与网络策略，
+    实现了熔断、限流和可观测性的基础设施层抽象，这与API网关的功能形成了互补而非替代关系，共同构建了云原生应用的全栈治理体系。
+    同时，服务发现机制从客户端负载均衡向中心化服务注册表的转变，反映了分布式系统设计范式的演进路径。""",
+    
+    # 4. 情感、产品和规格的复杂组合 - 测试多维度理解
+    "Apple最新发布的M3 Max芯片采用3nm制程工艺，集成920亿个晶体管，40核GPU在Blender渲染测试中比M2 Ultra快30%，但其3499美元的起售价引发了市场对高端笔记本性价比的讨论。",
+    
+    # 5. 跨语言和文化概念混合 - 测试多语言稀疏编码
+    "机器学习的过拟合问题（overfitting）类似于儒家思想中的'过犹不及'，需要通过正则化（如L1/L2惩罚）或数据增强来寻找偏差-方差权衡的'中庸之道'，这与深度学习中的Dropout技术有异曲同工之妙。",
+    
+    # 6. 时序和因果关系描述 - 测试逻辑关系理解
+    "由于美联储持续加息导致国债收益率曲线倒挂，科技股估值承压，但人工智能领域的突破性进展部分抵消了宏观不利因素，使得纳斯达克指数在2023年呈现U型反弹态势。",
+    
+    # 7. 包含代码、数学和自然语言的混合文本 - 测试结构化信息提取
+    "损失函数定义为 L(θ) = -∑log P(y_i|x_i;θ) + λ‖θ‖²，其中λ控制正则化强度，Adam优化器通过一阶矩和二阶矩的指数移动平均调整学习率，这在PyTorch中通过torch.optim.Adam实现。",
+    
+    # 8. 多实体关系和事件描述 - 测试关系提取能力
+    "特斯拉上海超级工厂在2023年交付了947,000辆Model 3和Model Y，占全球产量的52%，这得益于中国完善的供应链和较低的制造成本，但欧盟的反补贴调查可能影响其出口关税优惠。",
+    
+    # 9. 抽象概念和具象例子的结合 - 测试概念泛化
+    "注意力机制在神经机器翻译中如同人类阅读时的'焦点转移'，当解码器生成'人工智能'时，它会自动关注源语言中'artificial intelligence'的对应位置，这比传统的编码器-解码器架构更接近认知科学的'工作记忆'模型。",
+    
+    # 10. 对比和类比结构 - 测试比较分析能力
+    "卷积神经网络的空间不变性与循环神经网络的时序依赖性形成互补，正如计算机视觉处理二维局部特征而自然语言处理关注一维序列关系，但Vision Transformer通过图像分块打破了这种界限，证明了自注意力机制的通用性。"
 ]
 
 print(f"\nRunning inference on {len(texts)} texts...")

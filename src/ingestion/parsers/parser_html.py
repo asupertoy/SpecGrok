@@ -5,8 +5,8 @@ from pathlib import Path
 from bs4 import BeautifulSoup, Tag
 import html2text
 from llama_index.core.readers.base import BaseReader
-from llama_index.core.schema import TextNode
-from ingestion.loaders import Blob
+from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo
+from src.ingestion.loaders import Blob
 
 class HTMLParser(BaseReader):
     def __init__(self, remove_images: bool = True, remove_links: bool = False, custom_clean_rules: Optional[List[str]] = None):
@@ -338,4 +338,12 @@ class HTMLParser(BaseReader):
         base_metadata.update(metadata)
         base_metadata["source"] = blob.source
 
-        return TextNode(text=text, metadata=base_metadata)
+        node = TextNode(text=text, metadata=base_metadata)
+        
+        # [Fix] 设置 Source 关系指向原始文件
+        node.relationships[NodeRelationship.SOURCE] = RelatedNodeInfo(
+            node_id=blob.source,
+            metadata={"file_name": base_metadata.get("file_name")}
+        )
+
+        return node

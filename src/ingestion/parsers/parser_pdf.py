@@ -10,11 +10,11 @@ from pathlib import Path
 import fitz  # PyMuPDF
 from PIL import Image
 from llama_index.core.readers.base import BaseReader
-from llama_index.core.schema import Document, TextNode
+from llama_index.core.schema import Document, TextNode, NodeRelationship, RelatedNodeInfo
 
 # 本地模块
-from config import settings
-from ingestion.loaders import Blob
+from src.config import settings
+from src.ingestion.loaders import Blob
 
 class PDFParser(BaseReader):
     def __init__(self, ocr_enabled: bool = False):
@@ -375,7 +375,12 @@ class PDFParser(BaseReader):
             "latex_formula": latex_formulas if latex_formulas else None,
         })
 
-        return TextNode(
-            text=content,
-            metadata=metadata
+        node = TextNode(text=content, metadata=metadata)
+        
+        # [Fix] 设置 Source 关系指向原始文件
+        node.relationships[NodeRelationship.SOURCE] = RelatedNodeInfo(
+            node_id=blob.source,
+            metadata={"file_name": metadata.get("file_name")}
         )
+
+        return node

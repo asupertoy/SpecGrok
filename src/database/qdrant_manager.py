@@ -54,7 +54,7 @@ class QdrantManager:
                     )
                 },
                 sparse_vectors_config={
-                    "sparse": models.SparseVectorParams(
+                    "text-sparse": models.SparseVectorParams( # LlamaIndex default is "text-sparse", not "sparse"
                         index=models.SparseIndexParams(
                             on_disk=False,
                         )

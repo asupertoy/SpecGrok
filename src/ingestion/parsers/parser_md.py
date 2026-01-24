@@ -3,8 +3,8 @@ import re
 from pathlib import Path
 
 from llama_index.core.readers.base import BaseReader
-from llama_index.core.schema import TextNode
-from ingestion.loaders import Blob
+from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo
+from src.ingestion.loaders import Blob
 
 class MarkdownParser(BaseReader):
     def __init__(self, remove_images: bool = True):
@@ -206,7 +206,7 @@ class MarkdownParser(BaseReader):
     def _clean_placeholders(self, text: str) -> str:
         """清洗：去除无效的 Markdown 标记、注释、YAML Frontmatter 及 HTML 标签。"""
         # 1. 去除 YAML Frontmatter (位于文件开头的 --- ... ---)
-        text = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.DOTALL)
+        text = re.sub(r"^\s*---\n.*?\n---\n", "", text, flags=re.DOTALL)
         
         # 2. 去除 HTML 注释 <!-- ... -->
         text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
@@ -237,7 +237,12 @@ class MarkdownParser(BaseReader):
         # 补充 source
         base_metadata["source"] = blob.source
 
-        return TextNode(
-            text=text,
-            metadata=base_metadata
+        node = TextNode(text=text, metadata=base_metadata)
+        
+        # [Fix] 设置 Source 关系指向原始文件
+        node.relationships[NodeRelationship.SOURCE] = RelatedNodeInfo(
+            node_id=blob.source,
+            metadata={"file_name": base_metadata.get("file_name")}
         )
+        
+        return node

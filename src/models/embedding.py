@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from FlagEmbedding import BGEM3FlagModel
 from src.config import settings
 from src.models.backend_onnx import BGEM3OnnxBackend
+from llama_index.core.embeddings import BaseEmbedding
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -48,15 +49,15 @@ class BgeM3Service:
                 use_onnx = True
                 
             if use_onnx:
-                 logger.info(f"Detected ONNX model at {final_path}. Using ONNX backend.")
-                 tokenizer_path = os.path.dirname(final_path)
-                 self.model = BGEM3OnnxBackend(
-                     model_path=final_path,
-                     tokenizer_path=tokenizer_path,
-                     use_fp16=False
-                 )
-                 logger.info("BGEM3OnnxBackend loaded successfully.")
-                 return
+                logger.info(f"Detected ONNX model at {final_path}. Using ONNX backend.")
+                tokenizer_path = os.path.dirname(final_path)
+                self.model = BGEM3OnnxBackend(
+                    model_path=final_path,
+                    tokenizer_path=tokenizer_path,
+                    use_fp16=False
+                )
+                logger.info("BGEM3OnnxBackend loaded successfully.")
+                return
 
             # 3. Fallback to PyTorch (FlagEmbedding)
             
@@ -79,28 +80,121 @@ class BgeM3Service:
 
     def encode(self, text: Union[str, List[str]]) -> Dict[str, Any]:
         """
-        Returns a dictionary with 'dense_vecs', 'lexical_weights' (sparse), etc.
-        """
-        if self.model is None:
-            self._init_model()
+        Encode text(s) using BGE-M3 model.
         
-        # return_dense=True, return_sparse=True, return_colbert_vecs=False
-        return self.model.encode(
+        Args:
+            text: Single text string or list of texts
+            
+        Returns:
+            Dict with 'dense_vecs' and optionally 'lexical_weights' for hybrid search
+        """
+        if isinstance(text, str):
+            text = [text]
+            
+        result = self.model.encode(
             text, 
             return_dense=True, 
             return_sparse=True, 
             return_colbert_vecs=False
         )
+        
+        return {
+            'dense_vecs': result['dense_vecs'],
+            'lexical_weights': result['lexical_weights']
+        }
 
-# Global instance getter
-_service_instance: Optional[BgeM3Service] = None
+    @staticmethod
+    def get_sparse_embedding_adapter(texts: List[str]) -> Any:
+        """
+        Adapter for LlamaIndex QdrantVectorStore 'sparse_doc_fn'.
+        Converts BGE-M3's lexical weights (dict) to Qdrant's sparse format (indices, values).
+        
+        Args:
+            texts: List of strings to encode.
+            
+        Returns:
+            Tuple(List[List[int]], List[List[float]]): Batch indices and values.
+        """
+        instance = BgeM3Service()
+        if not texts:
+            return ([], [])
+            
+        result = instance.encode(texts)
+        
+        batch_indices = []
+        batch_values = []
+        
+        for d in result['lexical_weights']:
+            # d is {str_token_id: weight}
+            indices = [int(k) for k in d.keys()]
+            values = [float(v) for v in d.values()]
+            batch_indices.append(indices)
+            batch_values.append(values)
+            
+        return (batch_indices, batch_values)
 
-def get_embed_model() -> BgeM3Service:
+
+class BgeM3Embedding(BaseEmbedding):
+    """LlamaIndex compatible embedding wrapper for BGE-M3."""
+
+    model_config = {"arbitrary_types_allowed": True}
+
+    def __init__(self, service: BgeM3Service):
+        super().__init__()
+        object.__setattr__(self, 'service', service)
+
+    @classmethod
+    def class_name(cls) -> str:
+        return "BgeM3Embedding"
+
+    def _get_query_embedding(self, query: str) -> List[float]:
+        """Get query embedding."""
+        result = self.service.encode([query])
+        return result['dense_vecs'][0]
+
+    async def _aget_query_embedding(self, query: str) -> List[float]:
+        """Async get query embedding."""
+        return self._get_query_embedding(query)
+
+    def _get_text_embedding(self, text: str) -> List[float]:
+        """Get text embedding."""
+        return self._get_query_embedding(text)
+
+    async def _aget_text_embedding(self, text: str) -> List[float]:
+        """Async get text embedding."""
+        return self._get_text_embedding(text)
+
+    def _get_text_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Get multiple text embeddings."""
+        result = self.service.encode(texts)
+        return result['dense_vecs']
+
+    async def _aget_text_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Async get multiple text embeddings."""
+        return self._get_text_embeddings(texts)
+
+    # Compatibility API: provide encode(...) similar to BgeM3Service
+    def encode(self, texts: Union[str, List[str]]) -> dict:
+        """Compatibility wrapper: delegate to underlying service.encode and normalize single-input response.
+
+        Returns:
+            If input is a string, returns {'dense_vecs': List[float], 'lexical_weights': Dict[str, float]}
+            If input is a list, returns {'dense_vecs': List[List[float]], 'lexical_weights': List[Dict[str,float]]}
+        """
+        result = self.service.encode(texts)
+        dense = result.get('dense_vecs')
+        lexical = result.get('lexical_weights')
+        if isinstance(texts, str):
+            # single input: unwrap the first element
+            return {
+                'dense_vecs': dense[0] if isinstance(dense, list) and len(dense) > 0 else dense,
+                'lexical_weights': lexical[0] if isinstance(lexical, list) and len(lexical) > 0 else lexical,
+            }
+        return result
+
+def get_embed_model() -> BgeM3Embedding:
     """
-    Returns a singleton instance of the BgeM3Service (wrapper around BGEM3FlagModel).
-    NOTE: This is NOT a LlamaIndex embedding model.
+    Returns a LlamaIndex compatible embedding model using BGE-M3.
     """
-    global _service_instance
-    if _service_instance is None:
-        _service_instance = BgeM3Service()
-    return _service_instance
+    service = BgeM3Service()
+    return BgeM3Embedding(service)
