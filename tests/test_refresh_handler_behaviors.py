@@ -7,6 +7,10 @@ import hashlib
 
 import pytest
 
+# Set testing mode
+import os
+os.environ['IS_TESTING'] = '1'
+
 project_root = Path(__file__).resolve().parents[1]
 import sys
 sys.path.insert(0, str(project_root))
@@ -112,7 +116,7 @@ def test_refresh_index_triggers_default_handler(monkeypatch, storage_context, tm
     file_path = str(test_file)
     new_hash = hashlib.md5(test_file.read_bytes()).hexdigest()
 
-    doc = Document(doc_id=file_path, extra_info={'file_hash': new_hash, 'source': file_path})
+    doc = Document(doc_id=file_path, extra_info={'doc_id': new_hash, 'source': file_path})
 
     reingest = mgr.refresh_index([doc])
     assert file_path in reingest

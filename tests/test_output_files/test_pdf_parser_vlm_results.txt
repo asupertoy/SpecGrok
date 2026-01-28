@@ -1,0 +1,186 @@
+VLM 测试结果
+==================================================
+总节点数: 6
+
+节点 0:
+  文本: Massachusetts Institute of Technology Department of Electrical Engineering and Computer Science
+6.341: Discrete-Time Signal Processing
+OpenCourseWare 2006
+Lecture 15 The Discrete Fourier Transform (DFT)
+Reading: Sections 8.1 - 8.6 in Oppenheim, Schafer & Buck (OSB).
+
+Here are some basic points about the discrete Fourier Transform (DFT), the discrete-time Fourier Transform (DTFT), and the fast Fourier transform (FFT):
+1. The DTFT can’t be computed.
+2. The DFT can be computed.
+3. The DFT isn’t the DTFT.
+4. The FFT isn’t the DFT.
+5. The FFT is not necessarily the best/most efficient way to compute whatever it is that it computes.
+
+In this lecture, we will cover the first three points, and discuss the FFT in lecture 19.
+
+## Sampling in Frequency
+
+The DTFT of \( x[n] \) is defined as follows:
+\[ X(e^{j\omega}) = \sum_{n=-\infty}^{\infty} x[n] e^{-j\omega n} \]
+
+Since \(\omega\) is a continuous variable, there are an infinite number of possible values of \(\omega\) from 0 to \(2\pi\) or from \(-\pi\) to \(\pi\). Thus, \(X(e^{j\omega})\) can be computed only at a finite set of frequencies:
+\[ X(e^{j\omega_k}) = \sum_{n=-\infty}^{\infty} x[n] e^{-j\omega_k n} \]
+
+As a special case, we use N samples equally spaced around the unit circle:
+\[ \omega_k = \frac{2\pi k}{N}, \quad k = 0, 1, \ldots, N-1 \]
+and define the N samples of \(X(e^{j\omega})\):
+\[ X[k] = X(e^{j\omega})|_{\omega = \frac{2\pi k}{N}} = \sum_{n=-\infty}^{\infty} x[n] e^{-j\frac{2\pi k n}{N}} \]
+
+For convenience in notation, we define:
+\[ W_N = e^{-j\frac{2\pi}{N}} \]
+then
+\[ X[k] = \sum_{n=-\infty}^{\infty} x[n] W_N^{nk} \]
+
+However, we still cannot compute \(X[k]\) since \(x[n]\) can be infinitely long and we are summing for all \(n\). Even if \(x[n]\) is finite, we cannot always recover \(x[n]\) perfectly from \(X[k]\) because \(X[k]\)s are essentially the samples of the DTFT. So there are some necessary conditions for which we will be able to recover \(x[n]\) from \(X[k]\).
+
+In order to find these conditions, first speculate the sampling theorem in the continuous-time domain:
+
+[IMAGE_BLOCK_1]
+
+The image displays two pairs of time-domain signals and their corresponding frequency-domain Fourier transforms, illustrating the effect of sampling on signal spectra. The top pair shows a continuous-time signal \(x_c(t)\) (smooth, bandlimited waveform) and its Fourier transform \(X_c(j\Omega)\), a triangular spectrum centered at zero with bandwidth \(\Omega_n\) and peak amplitude 1. The bottom pair shows a sampled version \(x_s(t)\) (impulse train modulated by the original signal, with sampling interval \(\Delta T\)) and its Fourier transform \(X_s(j\Omega)\), which consists of periodic replicas of the original triangular spectrum spaced by \(\frac{2\pi}{\Delta T}\), each scaled by \(\frac{1}{\Delta T}\). Arrows indicate the Fourier transform relationship between each time- and frequency-domain pair.
+
+Sampling in time corresponds to replication in the frequency domain. In order to recover \(X_c(j\Omega)\) perfectly by low-pass filtering \(X_s(j\Omega)\), frequency aliasing should be avoided. Therefore, \(x(t)\) should be bandlimited to \(\Omega_0\), and the sampling interval should be short enough so that:
+\[ \Delta T < \frac{2\pi}{\Omega_0} \]
+
+We can apply the time-frequency duality to illustrate the sampling process in the frequency domain. If the sampling interval in frequency is not short enough, we get time aliasing....
+  元数据: {'size': 215844, 'file_size': 215844, 'file_name': 'dft_core.pdf', 'doc_id': 'f8506839d99dc34855d654b27483d6a2', 'extension': '.pdf', 'mime_type': 'application/pdf', 'domain': 'DSP', 'source': '/home/john/project/SpecGrok/data/raw_with_others/dsp/pdf/dft_core.pdf', 'section': 'Introduction', 'page': 0, 'page_numbers': [0, 1], 'image_paths': ['data/cache_vlm/dft_core/p2_fig_0.png'], 'has_formula': False, 'visual_blocks': [{'id': 1, 'placeholder': '[IMAGE_BLOCK_1]', 'type': 'image', 'text': 'The image displays two pairs of time-domain signals and their corresponding frequency-domain Fourier transforms, illustrating the effect of sampling on signal spectra. The top pair shows a continuous-time signal $$x_c(t)$$ (smooth, bandlimited waveform) and its Fourier transform $$X_c(j\\Omega)$$, a triangular spectrum centered at zero with bandwidth $$\\Omega_n$$ and peak amplitude 1. The bottom pair shows a sampled version $$x_s(t)$$ (impulse train modulated by the original signal, with sampling interval $$\\Delta T$$) and its Fourier transform $$X_s(j\\Omega)$$, which consists of periodic replicas of the original triangular spectrum spaced by $$2\\pi/\\Delta T$$, each scaled by $$1/\\Delta T$$. Arrows indicate the Fourier transform relationship between each time- and frequency-domain pair.'}], 'formula_blocks': []}
+
+节点 1:
+  文本: The image displays two pairs of time-domain signals and their corresponding frequency-domain Fourier transforms, illustrating the effect of sampling on signal spectra. The top pair shows a continuous-time signal $$x_c(t)$$ (smooth, bandlimited waveform) and its Fourier transform $$X_c(j\Omega)$$, a triangular spectrum centered at zero with bandwidth $$\Omega_n$$ and peak amplitude 1. The bottom pair shows a sampled version $$x_s(t)$$ (impulse train modulated by the original signal, with sampling interval $$\Delta T$$) and its Fourier transform $$X_s(j\Omega)$$, which consists of periodic replicas of the original triangular spectrum spaced by $$2\pi/\Delta T$$, each scaled by $$1/\Delta T$$. Arrows indicate the Fourier transform relationship between each time- and frequency-domain pair....
+  元数据: {'node_type': 'image', 'source': '/home/john/project/SpecGrok/data/raw_with_others/dsp/pdf/dft_core.pdf', 'section': 'Introduction', 'page': 1, 'image_path': 'data/cache_vlm/dft_core/p2_fig_0.png', 'doc_id': 'f8506839d99dc34855d654b27483d6a2'}
+
+节点 2:
+  文本: sampling interval in the frequency domain is ΔΩ, it corresponds to replication of signals in time domain at every 2π/ΔΩ. In order to recover $x(t)$ from $\tilde{x}(t)$ by time windowing, $x(t)$ should be time-limited to $T_0$, and sampling interval should be small enough so that
+\[ 2\pi \Delta\Omega < T_0 \]
+We have basically the same result in the discrete-time domain.
+
+[IMAGE_BLOCK_2]
+
+The image displays two pairs of time-domain discrete signals and their corresponding frequency-domain representations (DTFT magnitude plots), illustrating the effect of signal periodic extension on spectral resolution. The top pair shows a finite-length sequence \( x[n] \) of length \( M \) (nonzero from \( n=0 \) to \( n=M \)) and its DTFT \( X(e^{j\omega}) \), which is continuous, periodic with period \( 2\pi \), and exhibits main lobe and sidelobes. The bottom pair shows a periodically extended version \( \tilde{x}[n] \) formed by repeating \( x[n] \) with period \( N = 2\pi/\Delta\omega \), where \( \Delta\omega \) is the frequency spacing between spectral lines; its DTFT consists of discrete samples (impulses) at multiples of \( \Delta\omega \), forming a line spectrum that aligns with the original DTFT envelope. Arrows indicate the Fourier transform relationship between time and frequency domains in both cases.
+
+The sampling interval \( \Delta\omega \) should satisfy the following condition:
+\[ 2\pi \Delta\omega < M \]
+If we denote the number of frequency samples from 0 to \( 2\pi \) as \( N \), it is required that
+\[ 2\pi / N > \Delta\omega \]
+Under this condition, \( x[n] \) can be perfectly recovered from the samples of the DTFT:
+\[ x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] W_N^{-nk}, \quad n = 0, 1, \ldots, N-1 \]
+
+### The Discrete Fourier Series
+
+Let \( \tilde{x}[n] \) be a periodic signal with period \( N \) (We will use \( \tilde{} \) to denote periodic signals). Consider representing this signal by a Fourier series corresponding to a linear combination of harmonically related complex exponentials \( e^{j\omega n} \), where \( \omega = \frac{2\pi k}{N} \).
+
+\[ e_k[n] = e^{j \frac{2\pi k}{N} n} \]
+
+Notice that
+\[ e_k[n] = e_{k+N}[n] \]
+
+Therefore, the Fourier series of a discrete-time periodic signal \( \tilde{x}[n] \) only requires \( N \) complex exponentials, so it has the form
+\[ \tilde{x}[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{-j \frac{2\pi k}{N} n} \]
+
+Here, \( \frac{1}{N} \) is included in the definition for convenience in future. To obtain \( \tilde{X}[k] \) from \( \tilde{x}[n] \),
+\[ \tilde{X}[k] = \sum_{n=0}^{N-1} \tilde{x}[n] e^{j \frac{2\pi k}{N} n} \]
+which can be verified by direct substitution. Thus, \( \tilde{x}[n] \) is periodic in \( n \) with period \( N \), and \( \tilde{X}[k] \) is periodic in \( k \) with period \( N \).
+
+Consider two periodic sequences \( \tilde{x}[n] \) and \( \tilde{y}[n] \) both with period \( N \), such that
+\[ \tilde{x}[n] \leftrightarrow \tilde{X}[k] \]
+and
+\[ \tilde{y}[n] \leftrightarrow \tilde{Y}[k] \]
+
+OSB Figure 8.3 illustrates the periodic convolution of two periodic sequences. Note that as the sequences \( \tilde{x}_2[n-m] \) shifts to the right or left, values that leave the interval between the dotted lines at one end reappear at the other end because of the periodicity.
+
+The periodic convolution of periodic sequences corresponds to multiplication of the corresponding periodic sequences of Fourier series coefficients.
+\[ \sum_{m=0}^{N-1} \tilde{x}[m] \tilde{y}[n-m] \leftrightarrow \tilde{X}[k] \tilde{Y}[k] \]
+
+Other properties of the DFS are discussed in OSB section 5.2.
+
+### The Discrete Fourier Transform
+
+Consider a finite sequence \( x[n] \) with length \( N \), which is zero except at \( n = 0, 1, \ldots, N-1 \). Then, we can think about extending this sequence into a periodic sequence of period \( N \).
+\[ \tilde{x}[n] = x[n + rN] = x[n \mod N] = x((n)_N) \]
+```
+
+This Markdown document now includes the text, formulas, and visual description in the correct order, with the [IMAGE_BLOCK_2] placeholder in the appropriate place....
+  元数据: {'size': 215844, 'file_size': 215844, 'file_name': 'dft_core.pdf', 'doc_id': 'f8506839d99dc34855d654b27483d6a2', 'extension': '.pdf', 'mime_type': 'application/pdf', 'domain': 'DSP', 'source': '/home/john/project/SpecGrok/data/raw_with_others/dsp/pdf/dft_core.pdf', 'section': 'Introduction', 'page': 2, 'page_numbers': [2, 3], 'image_paths': ['data/cache_vlm/dft_core/p3_fig_0.png'], 'has_formula': False, 'visual_blocks': [{'id': 2, 'placeholder': '[IMAGE_BLOCK_2]', 'type': 'image', 'text': 'The image displays two pairs of time-domain discrete signals and their corresponding frequency-domain representations (DTFT magnitude plots), illustrating the effect of signal periodic extension on spectral resolution. The top pair shows a finite-length sequence $$x[n]$$ of length $$M$$ (nonzero from $$n=0$$ to $$n=M$$) and its DTFT $$X(e^{j\\omega})$$, which is continuous, periodic with period $$2\\pi$$, and exhibits main lobe and sidelobes. The bottom pair shows a periodically extended version $$\\tilde{x}[n]$$ formed by repeating $$x[n]$$ with period $$N = 2\\pi/\\Delta\\omega$$, where $$\\Delta\\omega$$ is the frequency spacing between spectral lines; its DTFT consists of discrete samples (impulses) at multiples of $$\\Delta\\omega$$, forming a line spectrum that aligns with the original DTFT envelope. Arrows indicate the Fourier transform relationship between time and frequency domains in both cases.'}], 'formula_blocks': []}
+
+节点 3:
+  文本: The image displays two pairs of time-domain discrete signals and their corresponding frequency-domain representations (DTFT magnitude plots), illustrating the effect of signal periodic extension on spectral resolution. The top pair shows a finite-length sequence $$x[n]$$ of length $$M$$ (nonzero from $$n=0$$ to $$n=M$$) and its DTFT $$X(e^{j\omega})$$, which is continuous, periodic with period $$2\pi$$, and exhibits main lobe and sidelobes. The bottom pair shows a periodically extended version $$\tilde{x}[n]$$ formed by repeating $$x[n]$$ with period $$N = 2\pi/\Delta\omega$$, where $$\Delta\omega$$ is the frequency spacing between spectral lines; its DTFT consists of discrete samples (impulses) at multiples of $$\Delta\omega$$, forming a line spectrum that aligns with the original DTFT envelope. Arrows indicate the Fourier transform relationship between time and frequency domains in both cases....
+  元数据: {'node_type': 'image', 'source': '/home/john/project/SpecGrok/data/raw_with_others/dsp/pdf/dft_core.pdf', 'section': 'Introduction', 'page': 2, 'image_path': 'data/cache_vlm/dft_core/p3_fig_0.png', 'doc_id': 'f8506839d99dc34855d654b27483d6a2'}
+
+节点 4:
+  文本: As long as there is no time aliasing, we can recover $x[n]$ perfectly from $\tilde{x}[n]$. 
+\[
+\tilde{x}[n] = x[n]R_N[n],
+\]
+where $R_N[n]$ is a rectangular window:
+\[
+R_N[n] = \begin{cases} 
+1 & n = 0, 1, \ldots, N-1 \\
+0 & \text{otherwise}
+\end{cases}
+\]
+The discrete Fourier transform of a finite sequence $x[n]$ is defined as the discrete Fourier series of $\tilde{x}[n]$. 
+\[
+X[k] = \sum_{n=0}^{N-1} x[n]W_N^{nk}, \quad k = 0, 1, \ldots, N-1
+\]
+\[
+x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k]W_N^{-nk}, \quad n = 0, 1, \ldots, N-1
+\]
+Consider a finite-duration sequence shown in OSB Figure 8.10(a). If we consider $x[n]$ as a sequence of length $N = 5$, the corresponding periodic sequence is $\tilde{x}[n]$ in OSB Figure 8.10(b). The Fourier series coefficients for $\tilde{x}[n]$ are shown in OSB Figure 8.10(c). To emphasize that the Fourier series coefficients are samples of the Fourier transform, $|X(e^{j\omega})|$ is also shown. The 5-point DFT $X[k]$ corresponds to one period of $\tilde{X}[k]$, as shown in OSB Figure 8.10(d).
+
+If we consider $x[n]$ to be a sequence of length $N = 10$, however, we get completely different DFT values. The corresponding periodic sequence $\tilde{x}[n]$ is shown in OSB Figure 8.11(b). The 10-point DFT $X[k]$ is shown in OSB Figure 8.11(c) and (d).
+
+We can interpret the relationship between a finite-length sequence $x[n]$ and a periodic sequence $\tilde{x}[n]$ by displaying $x[n]$ around the circumference of a cylinder with a circumference of exactly $N$ points. As we repeatedly traverse the circumference of the cylinder, the sequence that we see is the periodic sequence $\tilde{x}[n]$. Then, a linear shift of this sequence corresponds to a rotation of the cylinder. Such a shift is called a circular shift, which is illustrated in OSB Figure 8.12.
+
+A circular shift in time results in multiplying the DFT of the sequence by a linear phase factor.
+[IMAGE_BLOCK_3]
+\[
+x [ ( ( n-m ) )_{N} ] , \ \ \ 0 \leq n \leq N-1 \ \ \leftrightarrow\ \ e^{-j ( 2 \pi k / N ) m} X [ k ]
+\]
+
+Consider two finite-duration sequences $x_1[n]$ and $x_2[n]$, both of length $N$, with DFTs $X_1[k]$ and $X_2[k]$, respectively. Then, $X_3[k] = X_1[k]X_2[k]$ corresponds to the DFT of the $N$-point circular convolution of $x_1[n]$ and $x_2[n]$, defined as follows:
+[IMAGE_BLOCK_4]
+\[
+x_{3} [ n ]=\sum_{m=0}^{N-1} x_{1} [ m ] x_{2} [ ( ( n-m ) )_{N} ] , \ \quad0 \leq n \leq N-1 .
+\]
+OSB Figure 8.14 illustrates the circular convolution of two finite-length sequences.
+
+## Summary
+1. $x[n]$ arbitrary length DTFT $X(e^{j\omega}) \leftrightarrow$
+\[
+X(e^{j\omega}) = \sum_{n=-\infty}^{\infty} x[n]e^{-j\omega n}
+\]
+2. $x[n]$ periodic DFS $\tilde{X}[k] \leftrightarrow$
+\[
+X[k] = \sum_{n=0}^{N-1} x[n]W_N^{nk}, \quad W_N = e^{-j \frac{2\pi}{N}}
+\]
+\[
+X[k] = \sum_{n=-\infty}^{\infty} x[n]R_N[n]W_N^{nk} = \text{DTFT}\{\tilde{x}[n]R_N[n]\}|_{\omega = \frac{2\pi k}{N}}
+\]
+3. $x[n]$ finite length (0, 1, ..., N-1) DFT $X[k] \leftrightarrow$
+\[
+\tilde{x}[n] = x[(n)_N] = \sum_{r} x[n + rN]
+\]
+\[
+x[n] = \tilde{x}[n]R_N[n]
+\]
+\[
+\text{DFT of } x[n] = \text{DFS of } x[(n)_N] = \text{DTFT}\{x[n]\}|_{\omega = \frac{2\pi k}{N}}
+\]
+
+The following figure summarizes this lecture.
+[IMAGE_BLOCK_5]
+The diagram illustrates relationships among signal representations and transforms: a finite-length signal $x[n]$ connects to its DTFT $X(e^{j\omega})$ (continuous-frequency spectrum), which samples to the DFT $X[k]$; the DFT is also linked to a periodic extension $\tilde{x}[n]$ (periodic sequence), whose DFS yields $\tilde{X}[k]$. Bidirectional arrows indicate equivalence or invertibility between $x[n]$ and $\tilde{x}[n]$, and between $X[k]$ and $\tilde{X}[k]$, emphasizing that DFT and DFS are discrete, periodic counterparts of DTFT and Fourier series for finite/periodic sequences.
+```
+
+请注意，上述Markdown文本中的公式和图像占位符已根据您的要求进行了重新编排。...
+  元数据: {'size': 215844, 'file_size': 215844, 'file_name': 'dft_core.pdf', 'doc_id': 'f8506839d99dc34855d654b27483d6a2', 'extension': '.pdf', 'mime_type': 'application/pdf', 'domain': 'DSP', 'source': '/home/john/project/SpecGrok/data/raw_with_others/dsp/pdf/dft_core.pdf', 'section': 'Introduction', 'page': 4, 'page_numbers': [4, 5], 'image_paths': ['data/cache_vlm/dft_core/p5_formula_12.png', 'data/cache_vlm/dft_core/p6_fig_0.png', 'data/cache_vlm/dft_core/p5_formula_10.png'], 'has_formula': True, 'visual_blocks': [{'id': 5, 'placeholder': '[IMAGE_BLOCK_5]', 'type': 'image', 'text': 'The diagram illustrates relationships among signal representations and transforms: a finite-length signal $$x[n]$$ connects to its DTFT $$X(e^{j\\omega})$$ (continuous-frequency spectrum), which samples to the DFT $$X[k]$$; the DFT is also linked to a periodic extension $$\\tilde{x}[n]$$ (periodic sequence), whose DFS yields $$\\tilde{X}[k]$$. Bidirectional arrows indicate equivalence or invertibility between $$x[n]$$ and $$\\tilde{x}[n]$$, and between $$X[k]$$ and $$\\tilde{X}[k]$$, emphasizing that DFT and DFS are discrete, periodic counterparts of DTFT and Fourier series for finite/periodic sequences.'}], 'formula_blocks': [{'id': 3, 'placeholder': '[IMAGE_BLOCK_3]', 'latex': '$$\nx [ ( ( n-m ) )_{N} ] , \\ \\ \\ 0 \\leq n \\leq N-1 \\ \\ \\leftrightarrow\\ \\ e^{-j ( 2 \\pi k / N ) m} X [ k ]\n$$'}, {'id': 4, 'placeholder': '[IMAGE_BLOCK_4]', 'latex': '$$\nx_{3} [ n ]=\\sum_{1}^{N-1} x_{1} [ m ] x_{2} [ ( ( n-m ) )_{N} ] , \\ \\quad0 \\leq n \\leq N-1 .\n$$'}]}
+
+节点 5:
+  文本: The diagram illustrates relationships among signal representations and transforms: a finite-length signal $$x[n]$$ connects to its DTFT $$X(e^{j\omega})$$ (continuous-frequency spectrum), which samples to the DFT $$X[k]$$; the DFT is also linked to a periodic extension $$\tilde{x}[n]$$ (periodic sequence), whose DFS yields $$\tilde{X}[k]$$. Bidirectional arrows indicate equivalence or invertibility between $$x[n]$$ and $$\tilde{x}[n]$$, and between $$X[k]$$ and $$\tilde{X}[k]$$, emphasizing that DFT and DFS are discrete, periodic counterparts of DTFT and Fourier series for finite/periodic sequences....
+  元数据: {'node_type': 'image', 'source': '/home/john/project/SpecGrok/data/raw_with_others/dsp/pdf/dft_core.pdf', 'section': 'Introduction', 'page': 5, 'image_path': 'data/cache_vlm/dft_core/p6_fig_0.png', 'doc_id': 'f8506839d99dc34855d654b27483d6a2'}
+

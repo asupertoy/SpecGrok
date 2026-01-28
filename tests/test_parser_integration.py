@@ -8,8 +8,8 @@ import fitz
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ingestion.parsers.parser_pdf import PDFParser
-from ingestion.loaders import Blob, Loader
+from src.ingestion.parsers.parser_pdf import PDFParser
+from src.ingestion.loaders import Blob, Loader
 
 def test_pdf_parser_integration(tmp_path):
     # 1. 创建一个模拟的 PDF 文件

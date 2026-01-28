@@ -9,10 +9,10 @@ current_dir = Path(__file__).resolve().parent
 # Go up to SpecGrok root then down to src
 sys.path.append(str(current_dir.parent / "src"))
 
-from ingestion.parsers.parser_md import MarkdownParser
-from ingestion.loaders import Blob
+from src.ingestion.parsers.parser_md import MarkdownParser
+from src.ingestion.loaders import Blob
 
-def test_markdown_parser():
+def test_markdown_parser(save_results=True):
     """测试复杂的Markdown解析，包括多种元素和嵌套结构"""
     # Construct a complex markdown content
     md_content = """
@@ -363,6 +363,22 @@ $$
 
     print("✓ 复杂Markdown解析测试通过")
 
+    # 可选保存结果到 txt 文件
+    if save_results:
+        output_dir = current_dir / "test_output_files"
+        output_dir.mkdir(exist_ok=True)
+        output_file = output_dir / "md_parser_results.txt"
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("Markdown 解析测试结果\n")
+            f.write("=" * 50 + "\n")
+            f.write(f"总节点数: {len(nodes)}\n\n")
+            for i, node in enumerate(nodes):
+                f.write(f"节点 {i}:\n")
+                f.write(f"  文本: {node.text}\n")
+                f.write(f"  元数据: {node.metadata}\n")
+                f.write("\n")
+        print(f"测试结果已保存到: {output_file}")
+
     # 详细输出前几个节点
     for i, node in enumerate(nodes[:5]):
         print(f"\n--- Node {i} ---")
@@ -373,4 +389,4 @@ $$
         print(f"Content Preview:\n{node.text[:150]}...")
 
 if __name__ == "__main__":
-    test_markdown_parser()
+    test_markdown_parser(save_results=True)

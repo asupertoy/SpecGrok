@@ -19,19 +19,21 @@ class Settings(BaseSettings):
     
     # Model Settings
     LLM_MODEL_NAME: str = "deepseek-v3.2"
+    VLM_MODEL_NAME: str = "qwen3-vl-plus"  # qwen-vl-max、qwen3-vl-plus、qwen3-vl-flash
     # Logical name (path resolution is handled in embedding.py)
-    EMBEDDING_MODEL_NAME: str = "models/bge-m3"  # ["models/bge-m3", "models/bge-m3-onnx"]
-    RERANKER_MODEL_NAME: str = "bge-reranker-v2-m3"
+    EMBEDDING_MODEL_NAME: str = "models/bge-m3-onnx"  # ["models/bge-m3", "models/bge-m3-onnx"]
+    RERANKER_MODEL_NAME: str = "gte-rerank-v2"
 
     # Pix2Text model directory (relative to project root or absolute path)
     PIX2TEXT_HOME: str = Field("models/pix2text", validation_alias="PIX2TEXT_HOME")
+    CACHE_DIR: str = Field("data/cache_vlm", validation_alias="CACHE_DIR")  # 用于存放图片和 VLM 结果缓存的目录。
 
     # Ingestion Pipeline Settings
-    INGESTION_EXTENSIONS: List[str] = ['.txt', '.md', '.html', '.pdf'] 
+    INGESTION_EXTENSIONS: List[str] = ['.txt', '.md', '.html'] 
     INGESTION_RECURSIVE: bool = True
-    REMOVE_IMAGES: bool = True  # html parser setting
+    REMOVE_IMAGES: bool = True  # md、html parser setting
     REMOVE_LINKS: bool = False  # html parser setting
-    PDF_OCR_ENABLED: bool = True  # pdf parser setting
+    PDF_VLM_ENABLED: bool = True  # pdf parser setting
     ENABLE_HYBRID: bool = True
     
     # Index Manager Settings

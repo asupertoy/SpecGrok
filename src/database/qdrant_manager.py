@@ -3,7 +3,7 @@ from typing import Optional
 from qdrant_client import QdrantClient, models
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from src.config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,85 @@
+# PDFParser 深度解析架构设计方案 (DSP/技术文档专用)
+
+## 1. 核心设计理念
+本方案采用“版面分析优先 (Layout-First)”策略，以 PyMuPDF 为总指挥 (Orchestrator)，Pix2Text 为特种兵 (解决公式)，VLM 为视觉中枢 (解决图表)。
+
+- **PyMuPDF (Fitz)**: 负责 90% 的基础工作（提取文本、坐标、字体信息、判断区块类型）。
+- **Pix2Text (P2T)**: 仅在检测到“数学公式区域”或“乱码文本流”时介入，负责 OCR。
+- **VLM (Vision-Language Model)**: 仅在检测到图片、复杂表格或流程图时介入，进行语义描述。
+
+---
+
+## 2. 组件分工矩阵 (Decision Matrix)
+
+| 内容类型 | 识别特征 (PyMuPDF Signals) | 处理工具 | 处理策略 |
+| :--- | :--- | :--- | :--- |
+| **纯文本** | 字体常规 (Arial, Times)，编码正常 | PyMuPDF | 直接提取 `get_text()`，速度最快。 |
+| **代码块** | 字体含 "Mono", "Courier", "Consolas" | PyMuPDF | **禁止 OCR**。直接提取文本，保留空格与换行，包裹在 \`\`\` 中。 |
+| **行间公式** | 字体含 "Math", "Symbol", "CMBX"；或文本密度低但特殊字符多 | Pix2Text | 根据 BBox 截图 -> P2T 识别 -> 返回 LaTeX 格式 (`$$...$$`)。 |
+| **行内公式** | 文本流中出现 *Italic* (斜体) 或特殊数学字体 | PyMuPDF + 规则 | 简单变量用规则加 `$`；复杂乱码片段截图送 P2T (MFD模型)。 |
+| **图片/图表** | Block Type = 1 (Image) | VLM | 提取图片 -> VLM 生成详细描述 -> 插入 `[IMAGE_DESC]`。 |
+| **表格** | 检测到密集的网格线 (Drawings) 或表格结构 | VLM | 截图 -> VLM 转换为 Markdown Table。 |
+
+---
+
+## 3. 详细处理流程 (Pipeline Logic)
+
+### 步骤一：预处理与版面扫描
+1. 使用 PyMuPDF 打开 PDF。
+2. 遍历每一页，获取 `page.get_text("dict")`。这会返回包含 `blocks` -> `lines` -> `spans` 的层级结构。
+3. **关键点**: 不要直接由上到下拼凑字符串，需先对 Block 进行分类。
+
+### 步骤二：Block 级分类与处理
+遍历 `blocks`，根据其属性决定处理分支：
+
+**分支 A: 图片块 (Block Type = 1)**
+1. 获取图片二进制流或根据 BBox 截图。
+2. **调用 VLM**:
+   - Prompt: "这张图片出现在一篇DSP技术文档中。请详细描述图片内容。如果是图表，请列出数据趋势；如果是流程图，请描述逻辑路径。"
+3. 输出: `![Image Description](image_path)` 或直接写入语义化文本。
+
+**分支 B: 文本块 (Block Type = 0)**
+遍历 Block 内的 `lines` 和 `spans`，分析字体特征：
+
+1. **检测代码块**:
+   - 检查 Span 字体名称。若包含 "Courier" / "Mono"。
+   - 动作: 聚合该 Block 所有文本，保持原样，输出 markdown code block。
+   
+2. **检测行间公式 (Display Math)**:
+   - 检查特征: 字体包含 "Math/Symbol" 且该行字符数较少，或者 PyMuPDF 提取出大量未知字符 ()。
+   - 动作: 获取该 Block 的 `bbox`，调用 `page.get_pixmap(clip=bbox)` 截图。
+   - **调用 Pix2Text**: 使用 `recognize_formula` 接口。
+   - 输出: `$$\n{latex_output}\n$$`。
+
+3. **检测普通文本 & 表格**:
+   - 如果不是代码也不是公式，进入“流式解析”模式。
+   - **表格特殊处理**: 如果 PyMuPDF 检测到该区域有大量绘图指令（横竖线），将该区域视为表格，截图并调用 **VLM** (Prompt: "将此图片转换为 Markdown 表格")。
+
+### 步骤三：行内公式 (Inline Math) 的精细化处理
+这是最难点。在处理“普通文本”的 Span 时，执行以下逻辑：
+
+**逻辑循环 (Span Level)**:
+1. **获取属性**: `text`, `font`, `flags` (flags & 2 表示斜体)。
+2. **变量识别 (Heuristic)**:
+   - 如果 `flags` 指示斜体，且 `text` 长度 < 3 (如 "x", "n", "W")，且前后是正体文字。
+   - 动作: 将其包裹为 `$text$`。
+3. **数学符号识别**:
+   - 如果 `font` 是 "Times-Math" 或 "Symbol"。
+   - 动作: 如果 PyMuPDF 提取结果是正确 Unicode (如 ∑)，保留并加 `$`；如果是乱码，记录坐标，进行微型截图送 P2T (需权衡耗时，通常建议先保留乱码，后续用 LLM 修正)。
+
+---
+
+## 4. DSP 公式校准策略 (Post-Processing)
+
+由于 DSP 领域符号特殊（如 $W_N^{nk}$, $H(e^{j\omega})$），单纯依靠 OCR 和字体检测难免出错。采用 **LLM 后处理** 策略：
+
+1. **建立 DSP 常用符号表 (Prompt Context)**:
+   - 告诉 LLM: "本文档涉及数字信号处理。请注意常见的符号错误，例如将 'W N' 修正为 '$W_N$', 将 'x(n)' 修正为 '$x[n]$' (若文档习惯用方括号)。"
+   
+2. **清洗阶段**:
+   - 将 Parser 输出的 Markdown 文本分块（Chunking）。
+   - 送入 DeepSeek/GPT-4o-mini。
+   - System Prompt: "你是一个文档修复专家。请修复 OCR 导致的数学公式格式错误，保持代码块和图片描述不变。重点关注行内公式的 LaTeX 格式规范化。"
+
+---
+

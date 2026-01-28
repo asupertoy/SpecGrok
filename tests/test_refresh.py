@@ -6,6 +6,9 @@ import sys
 from pathlib import Path
 import hashlib
 
+# Set testing mode
+os.environ['IS_TESTING'] = '1'
+
 project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
@@ -54,7 +57,7 @@ def test_refresh_auto_reingest(tmp_path):
         data = f.read()
     new_hash = hashlib.md5(data).hexdigest()
 
-    doc = Document(doc_id=file_path, extra_info={'file_hash': new_hash, 'source': file_path})
+    doc = Document(doc_id=file_path, extra_info={'doc_id': new_hash, 'source': file_path})
 
     # call refresh_index, expect it to schedule reingest and automatically call handler
     reingest = index_manager.refresh_index([doc])

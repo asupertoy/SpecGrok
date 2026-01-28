@@ -6,8 +6,8 @@ import fitz
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ingestion.loaders import Loader
-from ingestion.parsers.parser_pdf import PDFParser
+from src.ingestion.loaders import Loader
+from src.ingestion.parsers.parser_pdf import PDFParser
 
 RAW_DIR = ROOT / "data" / "raw"
 

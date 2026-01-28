@@ -4,11 +4,9 @@ import time
 import tempfile
 from pathlib import Path
 
-# Add project root to path (so 'src' package is found)
+# Add src to path
 current_dir = Path(__file__).resolve().parent
-project_root = current_dir.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+sys.path.append(str(current_dir.parent / "src"))
 
 from src.ingestion.parsers.parser_txt import TextParser
 from src.ingestion.loaders import Blob
@@ -675,6 +673,256 @@ Unicode符号：αβγδεζηθικλμνξοπρστυφχψω
 
     print("✓ Unicode和特殊字符测试通过")
 
+def test_complex_text_parsing(save_results=True):
+    """测试复杂的文本解析，包括多种元素和嵌套结构"""
+    print("=== 测试复杂文本解析 ===")
+    
+    # 构造复杂的文本内容
+    text_content = r"""第一章 引言
+
+这是文档的引言部分，包含了基本的介绍内容。
+
+## 第二章 背景介绍
+
+### 历史发展
+
+Markdown于2004年由John Gruber创建，旨在提供一种易读易写的纯文本格式。
+
+#### 版本演进
+
+- **Markdown 1.0**: 最初版本
+- **CommonMark**: 标准化规范
+- **GitHub Flavored Markdown**: 扩展版本
+
+### 主要特性
+
+Markdown支持：
+
+1. **标题层级** (H1-H6)
+2. **文本格式化**：
+   - *斜体*
+   - **粗体**
+   - `代码`
+   - ~~删除线~~
+3. **列表**：
+   - 无序列表
+   - 有序列表
+   - 嵌套列表
+
+## 第三章 代码示例
+
+### Python代码块
+
+```
+# 这是一个复杂的Python函数
+def complex_function(data: List[Dict[str, Any]], threshold: float = 0.5) -> Dict[str, Any]:
+    \"\"\"复杂的函数处理数据\"\"\"
+    # 过滤数据
+    filtered = [item for item in data if item.get('score', 0) > threshold]
+
+    # 统计分析
+    stats = {
+        'total': len(filtered),
+        'average_score': sum(item['score'] for item in filtered) / len(filtered) if filtered else 0,
+        'categories': {}
+    }
+
+    # 分类统计
+    for item in filtered:
+        cat = item.get('category', 'unknown')
+        stats['categories'][cat] = stats['categories'].get(cat, 0) + 1
+
+    # ## 这不是标题，只是在代码注释中
+    return stats
+
+# 调用函数
+result = complex_function(sample_data)
+print(f"处理结果: {result}")
+```
+
+### JavaScript代码块
+
+```javascript
+// 复杂的JavaScript函数
+class DataProcessor {
+    constructor(config) {
+        this.config = config;
+        // ## 这也不是标题
+    }
+
+    async process(data) {
+        try {
+            // 数据验证
+            if (!Array.isArray(data)) {
+                throw new Error('数据必须是数组');
+            }
+
+            // 并行处理
+            const promises = data.map(async (item) => {
+                const processed = await this.transform(item);
+                return this.validate(processed);
+            });
+
+            return await Promise.all(promises);
+        } catch (error) {
+            console.error('处理失败:', error);
+            throw error;
+        }
+    }
+
+    // ## 私有方法
+    transform(item) {
+        return {
+            ...item,
+            processed_at: new Date().toISOString(),
+            hash: this.generateHash(item)
+        };
+    }
+}
+```
+
+## 第四章 数学公式
+
+### 基本公式
+
+内联公式：$E = mc^2$ 是爱因斯坦的质能方程。
+
+### 复杂公式块
+
+$$
+\frac{d}{dx} \int_a^x f(t) \, dt = f(x)
+$$
+
+$$
+\lim_{x \to 0} \frac{\sin x}{x} = 1
+$$
+
+### 矩阵和方程组
+
+$$
+\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}
+\begin{pmatrix}
+x \\
+y
+\end{pmatrix}
+=
+\begin{pmatrix}
+ax + by \\
+cx + dy
+\end{pmatrix}
+$$
+
+### 多行方程
+
+$$
+\begin{align}
+\nabla \cdot \mathbf{E} &= \frac{\rho}{\epsilon_0} \\
+\nabla \cdot \mathbf{B} &= 0 \\
+\nabla \times \mathbf{E} &= -\frac{\partial \mathbf{B}}{\partial t} \\
+\nabla \times \mathbf{B} &= \mu_0 \mathbf{J} + \mu_0 \epsilon_0 \frac{\partial \mathbf{E}}{\partial t}
+\end{align}
+$$
+
+## 第五章 数据表格
+
+### 基本表格
+
+| 姓名 | 年龄 | 职业 | 薪资 |
+|------|------|------|------|
+| 张三 | 28 | 工程师 | ¥12000 |
+| 李四 | 32 | 设计师 | ¥10000 |
+| 王五 | 25 | 产品经理 | ¥15000 |
+
+### 复杂表格（包含Markdown语法）
+
+| 功能 | 描述 | 示例 | 状态 |
+|------|------|------|------|
+| **标题** | 支持多级标题 | # H1<br>## H2<br>### H3 | ✅ |
+| *格式化* | 文本样式 | **粗体**<br>*斜体*<br>`代码` | ✅ |
+| 链接 | 外部链接 | [Google](https://google.com)<br>[内部](#section) | ✅ |
+| 图片 | 图片显示 | ![Logo](https://example.com/logo.png) | ✅ |
+| 列表 | 嵌套列表 | - 项目1<br>  - 子项目<br>- 项目2 | ✅ |
+| # 标题标记 | 表格中的标题 | # 这不是标题 | ✅ |
+
+### 跨行表格
+
+| 项目 | 说明 | 状态 | 备注 |
+|------|------|------|------|
+| 数据处理 | 实现复杂的数据处理逻辑 | 完成 | 支持多格式输入 |
+| 用户界面 | 设计直观的用户界面 | 进行中 | 使用现代UI框架 |
+| API集成 | 与第三方API集成 | 待开始 | 需要API密钥 |
+| 测试覆盖 | 编写全面的单元测试 | 完成 | 覆盖率95% |
+
+## 第六章 结论
+
+### 总结
+
+本文档演示了文本解析器的各种复杂特性：
+
+1. **多级标题嵌套**
+2. **多种代码块**
+3. **复杂数学公式**
+4. **丰富的表格格式**
+5. **块保护逻辑**
+
+### 未来展望
+
+未来将继续扩展解析器的功能，支持更多现代文档需求。
+
+CONCLUSION
+
+总结内容。
+
+I. 附录A
+
+附录内容。
+
+II. 附录B
+
+更多附录内容。
+""".strip()
+
+    blob = Blob(data=text_content.encode("utf-8"), source="complex_test.txt")
+    parser = TextParser()
+    nodes = parser.parse(blob)
+
+    print(f"总节点数: {len(nodes)}")
+
+    # 验证基本结构
+    assert len(nodes) >= 8, f"期望至少8个节点，实际{len(nodes)}"
+
+    # 检查标题层级
+    headers = [node.metadata.get('section_header') for node in nodes]
+    print(f"识别到的标题: {headers}")
+
+    # 检查内容包含
+    all_content = "\n".join([node.text for node in nodes])
+    assert "def complex_function" in all_content, "应该包含Python代码"
+    assert "class DataProcessor" in all_content, "应该包含JavaScript代码"
+    assert "E = mc^2" in all_content, "应该包含数学公式"
+    assert "|" in all_content, "应该包含表格"
+
+    print("✓ 复杂文本解析测试通过")
+
+    # 可选保存结果到 txt 文件
+    if save_results:
+        output_dir = current_dir / "test_output_files"
+        output_dir.mkdir(exist_ok=True)
+        output_file = output_dir / "text_parser_results.txt"
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("Text 解析测试结果\n")
+            f.write("=" * 50 + "\n")
+            f.write(f"总节点数: {len(nodes)}\n\n")
+            for i, node in enumerate(nodes):
+                f.write(f"节点 {i}:\n")
+                f.write(f"  文本: {node.text[:200]}...\n")
+                f.write(f"  元数据: {node.metadata}\n")
+                f.write("\n")
+        print(f"测试结果已保存到: {output_file}")
+
 def run_all_tests():
     """运行所有测试"""
     print("开始TextParser功能测试...\n")
@@ -695,6 +943,7 @@ def run_all_tests():
         test_edge_cases()
         test_config_options()
         test_unicode_and_special_chars()
+        test_complex_text_parsing()
         print("\n🎉 所有测试通过！TextParser功能完整且健壮。")
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")

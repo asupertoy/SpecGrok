@@ -1,0 +1,203 @@
+Text 解析测试结果
+==================================================
+总节点数: 24
+
+节点 0:
+  文本: 第一章 引言
+
+
+这是文档的引言部分，包含了基本的介绍内容。...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '第一章 引言', 'section_path': '第一章 引言', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-4'}
+
+节点 1:
+  文本: ## 第二章 背景介绍...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '## 第二章 背景介绍', 'section_path': '## 第二章 背景介绍', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-1'}
+
+节点 2:
+  文本: ### 历史发展
+
+
+Markdown于2004年由John Gruber创建，旨在提供一种易读易写的纯文本格式。...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 历史发展', 'section_path': '### 历史发展', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-4'}
+
+节点 3:
+  文本: #### 版本演进
+
+
+- **Markdown 1.0**: 最初版本
+- **CommonMark**: 标准化规范
+- **GitHub Flavored Markdown**: 扩展版本...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '#### 版本演进', 'section_path': '#### 版本演进', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-6'}
+
+节点 4:
+  文本: ### 主要特性...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 主要特性', 'section_path': '### 主要特性', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-1'}
+
+节点 5:
+  文本: Markdown支持：...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': 'Markdown支持：', 'section_path': 'Markdown支持：', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-1'}
+
+节点 6:
+  文本: 1. **标题层级** (H1-H6)
+
+2. **文本格式化**：
+- *斜体*
+- **粗体**
+- `代码`
+- ~~删除线~~
+3. **列表**：
+- 无序列表
+- 有序列表
+- 嵌套列表...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '1. **标题层级** (H1-H6)', 'section_path': '1. **标题层级** (H1-H6)', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-11'}
+
+节点 7:
+  文本: ## 第三章 代码示例...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '## 第三章 代码示例', 'section_path': '## 第三章 代码示例', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-1'}
+
+节点 8:
+  文本: ### Python代码块
+
+
+```
+# 这是一个复杂的Python函数
+def complex_function(data: List[Dict[str, Any]], threshold: float = 0.5) -> Dict[str, Any]:
+    \"\"\"复杂的函数处理数据\"\"\"
+    # 过滤数据
+    filtered = [item for item in ...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### Python代码块', 'section_path': '### Python代码块', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-29'}
+
+节点 9:
+  文本: ### JavaScript代码块
+
+
+```javascript
+// 复杂的JavaScript函数
+class DataProcessor {
+    constructor(config) {
+        this.config = config;
+        // ## 这也不是标题
+    }
+
+    async process(data) {
+        try {
+ ...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### JavaScript代码块', 'section_path': '### JavaScript代码块', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-41'}
+
+节点 10:
+  文本: ## 第四章 数学公式...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '## 第四章 数学公式', 'section_path': '## 第四章 数学公式', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-1'}
+
+节点 11:
+  文本: ### 基本公式
+
+
+内联公式：$E = mc^2$ 是爱因斯坦的质能方程。...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 基本公式', 'section_path': '### 基本公式', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-4'}
+
+节点 12:
+  文本: ### 复杂公式块
+
+
+$$
+\frac{d}{dx} \int_a^x f(t) \, dt = f(x) $$
+
+$$
+\lim_{x \to 0} \frac{\sin x}{x} = 1 $$...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 复杂公式块', 'section_path': '### 复杂公式块', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-8'}
+
+节点 13:
+  文本: ### 矩阵和方程组
+
+
+$$ \begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix} $$
+
+### 多行方程
+
+$$ \begin{align}
+\nabla \cdot \mathbf...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 矩阵和方程组', 'section_path': '### 矩阵和方程组', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-12'}
+
+节点 14:
+  文本: ## 第五章 数据表格...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '## 第五章 数据表格', 'section_path': '## 第五章 数据表格', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-1'}
+
+节点 15:
+  文本: ### 基本表格
+
+
+| 姓名 | 年龄 | 职业 | 薪资 |
+|------|------|------|------|
+| 张三 | 28 | 工程师 | ¥12000 |
+| 李四 | 32 | 设计师 | ¥10000 |
+| 王五 | 25 | 产品经理 | ¥15000 |...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 基本表格', 'section_path': '### 基本表格', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-8'}
+
+节点 16:
+  文本: ### 复杂表格（包含Markdown语法）
+
+
+| 功能 | 描述 | 示例 | 状态 |
+|------|------|------|------|
+| **标题** | 支持多级标题 | # H1## H2### H3 | ✅ |
+| *格式化* | 文本样式 | **粗体***斜体*`代码` | ✅ |
+| 链接 | 外部链接 | [Google](https://google.com)[...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 复杂表格（包含Markdown语法）', 'section_path': '### 复杂表格（包含Markdown语法）', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-11'}
+
+节点 17:
+  文本: ### 跨行表格
+
+
+| 项目 | 说明 | 状态 | 备注 |
+|------|------|------|------|
+| 数据处理 | 实现复杂的数据处理逻辑 | 完成 | 支持多格式输入 |
+| 用户界面 | 设计直观的用户界面 | 进行中 | 使用现代UI框架 |
+| API集成 | 与第三方API集成 | 待开始 | 需要API密钥 |
+| 测试覆盖 | 编写全面的单元测试 | 完成...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 跨行表格', 'section_path': '### 跨行表格', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-9'}
+
+节点 18:
+  文本: ## 第六章 结论...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '## 第六章 结论', 'section_path': '## 第六章 结论', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-1'}
+
+节点 19:
+  文本: ### 总结
+
+
+本文档演示了文本解析器的各种复杂特性：
+
+1. **多级标题嵌套**
+2. **多种代码块**
+3. **复杂数学公式**
+4. **丰富的表格格式**
+5. **块保护逻辑**...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 总结', 'section_path': '### 总结', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-10'}
+
+节点 20:
+  文本: ### 未来展望
+
+
+未来将继续扩展解析器的功能，支持更多现代文档需求。...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': '### 未来展望', 'section_path': '### 未来展望', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-4'}
+
+节点 21:
+  文本: CONCLUSION
+
+
+总结内容。...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': 'CONCLUSION', 'section_path': 'CONCLUSION', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-4'}
+
+节点 22:
+  文本: I. 附录A
+
+
+附录内容。...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': 'I. 附录A', 'section_path': 'I. 附录A', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-4'}
+
+节点 23:
+  文本: II. 附录B
+
+
+更多附录内容。...
+  元数据: {'domain': None, 'file_name': 'complex_test.txt', 'section_header': 'II. 附录B', 'section_path': 'II. 附录B', 'level': 1, 'source': 'complex_test.txt', 'line_range': '1-4'}
+

@@ -9,15 +9,15 @@ from llama_index.core.schema import BaseNode, TextNode
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.utils import get_tokenizer
 # 引入自定义组件
-from src.ingestion.loaders import Loader, Blob
-from src.ingestion.parsers.parser_txt import TextParser
-from src.ingestion.parsers.parser_pdf import PDFParser
-from src.ingestion.parsers.parser_html import HTMLParser
-from src.ingestion.parsers.parser_md import MarkdownParser 
-from src.ingestion.chunking import Chunking
-from src.models.embedding import get_embed_model, BgeM3Service
-from src.ingestion.indexmannager import IndexManager
-from src.config import settings
+from .loaders import Loader, Blob
+from .parsers.parser_txt import TextParser
+from .parsers.parser_pdf import PDFParser
+from .parsers.parser_html import HTMLParser
+from .parsers.parser_md import MarkdownParser 
+from .chunking import Chunking
+from models.embedding import get_embed_model, BgeM3Service
+from .indexmannager import IndexManager
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +58,8 @@ class IngestionPipelineWrapper:
             remove_images=self.config.get('REMOVE_IMAGES', True),
             remove_links=self.config.get('REMOVE_LINKS', False)
         )
-        self.md_parser = MarkdownParser() # 假设已有实现
-        self.pdf_parser = PDFParser(ocr_enabled=self.config.get('PDF_OCR_ENABLED', False))
+        self.md_parser = MarkdownParser(remove_images=self.config.get('REMOVE_IMAGES', True)) # 假设已有实现
+        self.pdf_parser = PDFParser(vlm_enabled=self.config.get('PDF_VLM_ENABLED', False))
         
         # 分块器
         self.chunking = Chunking(
@@ -171,11 +171,11 @@ class IngestionPipelineWrapper:
             docs_to_check = []
             
             for blob in blobs:
-                # 使用 source 路径作为 doc_id
-                doc_id = blob.source
+                # 使用 doc_id 哈希作为 doc_id
+                doc_id = blob.metadata['doc_id']
                 blob_map[doc_id] = blob
                 
-                # 构造虚拟 Doc (IndexManager will read metadata['file_hash'])
+                # 构造虚拟 Doc (IndexManager will read metadata['doc_id'])
                 doc = Document(text="", id_=doc_id, metadata=blob.metadata)
                 docs_to_check.append(doc)
             

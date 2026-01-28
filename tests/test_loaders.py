@@ -7,7 +7,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ingestion.loaders import Loader, Blob
+from src.ingestion.loaders import Loader, Blob
 
 
 def test_load_file(tmp_path):

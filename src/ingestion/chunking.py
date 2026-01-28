@@ -243,7 +243,8 @@ class Chunking:
             Dict: 增强的元数据。
         """
         enriched = parent_meta.copy()
-        enriched['chunk_id'] = index
+        doc_id = parent_meta.get('doc_id', 'unknown')
+        enriched['chunk_id'] = f"{doc_id}#{index}"
         # 确保关键字段存在
         enriched.setdefault('section_path', parent_meta.get('section_header', 'Unknown'))
         enriched.setdefault('source', parent_meta.get('source', 'Unknown'))
@@ -274,17 +275,17 @@ class Chunking:
         """
         生成确定性的 Node ID (Chunk Hash)。
         
-        逻辑：md5(source | md5(content))
-        确保只要源文件路径不变且切分出的文本内容不变，生成的 ID 就永远一致。
+        逻辑：md5(chunk_id | md5(content))
+        确保只要 chunk_id 不变且切分出的文本内容不变，生成的 ID 就永远一致。
         这是实现向量库幂等性(Idempotency)的关键步骤。
         """
-        source = metadata.get('source', '') or metadata.get('file_name', '')
+        chunk_id = metadata.get('chunk_id', '')
         
         # 使用文本内容的 MD5 hash 作为唯一性依据
         content_hash = hashlib.md5((text or '').encode('utf-8')).hexdigest()
         
         # 组合 Key
-        node_key = f"{source}|{content_hash}"
+        node_key = f"{chunk_id}|{content_hash}"
         
         return hashlib.md5(node_key.encode('utf-8')).hexdigest()
 

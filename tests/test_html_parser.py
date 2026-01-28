@@ -6,8 +6,8 @@ from pathlib import Path
 current_dir = Path(__file__).resolve().parent
 sys.path.append(str(current_dir.parent / "src"))
 
-from ingestion.parsers.parser_html import HTMLParser
-from ingestion.loaders import Blob
+from src.ingestion.parsers.parser_html import HTMLParser
+from src.ingestion.loaders import Blob
 
 def test_basic_parsing():
     """测试基本HTML解析和Markdown转换，包括复杂嵌套和多种元素"""
@@ -328,6 +328,229 @@ def function():
     
     print("✓ 块保护逻辑测试通过")
 
+def test_complex_html_parsing(save_results=True):
+    """测试复杂的HTML解析，包括多种元素和嵌套结构"""
+    print("=== 测试复杂HTML解析 ===")
+    
+    # 构造复杂的HTML内容
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>复杂HTML文档测试</title>
+        <meta name="description" content="这是一个用于测试HTML解析器的复杂文档">
+        <meta name="keywords" content="HTML,解析,测试,复杂文档">
+    </head>
+    <body>
+        <header>
+            <h1>复杂HTML文档测试</h1>
+            <nav>
+                <ul>
+                    <li><a href="#intro">介绍</a></li>
+                    <li><a href="#content">内容</a></li>
+                    <li><a href="#code">代码</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section id="intro">
+                <h2>引言</h2>
+                <p>这是文档的<strong>引言部分</strong>，包含<em>斜体</em>和<code>内联代码</code>。</p>
+                <blockquote>
+                    <p>这是一个引用块，包含多行内容。</p>
+                    <p>第二行引用内容。</p>
+                </blockquote>
+            </section>
+
+            <section id="content">
+                <h2>主要内容</h2>
+                <h3>列表部分</h3>
+                <ul>
+                    <li>顶级项目1</li>
+                    <li>顶级项目2
+                        <ul>
+                            <li>子项目2.1</li>
+                            <li>子项目2.2
+                                <ul>
+                                    <li>深层子项目2.2.1</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>顶级项目3</li>
+                </ul>
+
+                <h3>有序列表</h3>
+                <ol>
+                    <li>第一项</li>
+                    <li>第二项
+                        <ol>
+                            <li>子项2.1</li>
+                            <li>子项2.2</li>
+                        </ol>
+                    </li>
+                </ol>
+
+                <h3>表格示例</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>描述</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>解析HTML</td>
+                            <td>将HTML转换为结构化文本</td>
+                            <td>完成</td>
+                        </tr>
+                        <tr>
+                            <td>提取元数据</td>
+                            <td>从head标签提取信息</td>
+                            <td>完成</td>
+                        </tr>
+                        <tr>
+                            <td>块保护</td>
+                            <td>防止在代码块中误切分</td>
+                            <td>进行中</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>图片和链接</h3>
+                <p>查看这个<a href="https://example.com">外部链接</a>和<img src="image.jpg" alt="示例图片" width="200" height="100">。</p>
+                <p>还有一个<a href="#section">内部锚点</a>链接。</p>
+            </section>
+
+            <section id="code">
+                <h2>代码示例</h2>
+                
+                <h3>Python代码块</h3>
+                <pre><code class="language-python">def complex_function(data, threshold=0.5):
+    # 这是一个复杂的函数
+    filtered = [item for item in data if item.get('score', 0) > threshold]
+    
+    # 统计分析
+    stats = {
+        'total': len(filtered),
+        'average': sum(item['score'] for item in filtered) / len(filtered) if filtered else 0
+    }
+    
+    # ## 这不是标题，只是在代码注释中
+    return stats
+
+# 调用函数
+result = complex_function(sample_data)
+print(f"结果: {result}")</code></pre>
+
+                <h3>JavaScript代码块</h3>
+                <pre><code class="language-javascript">class DataProcessor {
+    constructor(config) {
+        this.config = config;
+        // ## 这也不是标题
+    }
+
+    async process(data) {
+        try {
+            // 数据验证
+            if (!Array.isArray(data)) {
+                throw new Error('数据必须是数组');
+            }
+
+            const promises = data.map(async (item) => {
+                const processed = await this.transform(item);
+                return this.validate(processed);
+            });
+
+            return await Promise.all(promises);
+        } catch (error) {
+            console.error('处理失败:', error);
+            throw error;
+        }
+    }
+
+    // ## 私有方法
+    transform(item) {
+        return {
+            ...item,
+            processed_at: new Date().toISOString()
+        };
+    }
+}</code></pre>
+
+                <h3>数学公式</h3>
+                <p>内联公式：$E = mc^2$ 是质能方程。</p>
+                <p>块级公式：</p>
+                <p>$$\frac{d}{dx} \int_a^x f(t) \, dt = f(x)$$</p>
+                <p>$$\lim_{x \to 0} \frac{\sin x}{x} = 1$$</p>
+                <p>矩阵：</p>
+                <p>$$\begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix}$$</p>
+            </section>
+
+            <section>
+                <h2>结论</h2>
+                <p>本文档演示了HTML解析器的各种复杂特性：</p>
+                <ul>
+                    <li>多级标题嵌套</li>
+                    <li>复杂列表结构</li>
+                    <li>表格转换</li>
+                    <li>代码块保护</li>
+                    <li>数学公式处理</li>
+                    <li>元数据提取</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 测试文档</p>
+        </footer>
+    </body>
+    </html>
+    """.strip()
+
+    blob = Blob(data=html_content.encode("utf-8"), source="complex_test.html")
+    parser = HTMLParser()
+    nodes = parser.parse(blob)
+
+    print(f"总节点数: {len(nodes)}")
+
+    # 验证基本结构
+    assert len(nodes) >= 5, f"期望至少5个节点，实际{len(nodes)}"
+
+    # 检查标题层级
+    headers = [node.metadata.get('section_header') for node in nodes]
+    print(f"识别到的标题: {headers}")
+
+    # 检查内容包含
+    all_content = "\n".join([node.text for node in nodes])
+    assert "def complex_function" in all_content, "应该包含Python代码"
+    assert "class DataProcessor" in all_content, "应该包含JavaScript代码"
+    assert "E = mc^2" in all_content, "应该包含数学公式"
+    assert "|" in all_content, "应该包含表格"
+
+    print("✓ 复杂HTML解析测试通过")
+
+    # 可选保存结果到 txt 文件
+    if save_results:
+        output_dir = current_dir / "test_output_files"
+        output_dir.mkdir(exist_ok=True)
+        output_file = output_dir / "html_parser_results.txt"
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("HTML 解析测试结果\n")
+            f.write("=" * 50 + "\n")
+            f.write(f"总节点数: {len(nodes)}\n\n")
+            for i, node in enumerate(nodes):
+                f.write(f"节点 {i}:\n")
+                f.write(f"  文本: {node.text[:200]}...\n")
+                f.write(f"  元数据: {node.metadata}\n")
+                f.write("\n")
+        print(f"测试结果已保存到: {output_file}")
+
 def run_all_tests():
     """运行所有测试"""
     print("开始HTMLParser功能测试...\n")
@@ -340,6 +563,7 @@ def run_all_tests():
         test_block_protection()
         test_edge_cases()
         test_load_data()
+        test_complex_html_parsing()
         print("\n🎉 所有测试通过！HTMLParser功能正确实现。")
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")

@@ -6,6 +6,9 @@ import sys
 from pathlib import Path
 import hashlib
 
+# Set testing mode
+os.environ['IS_TESTING'] = '1'
+
 project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root))
 
@@ -47,7 +50,7 @@ def test_default_reingest_handler_monkeypatch(monkeypatch, tmp_path):
     with open(file_path, 'rb') as f:
         new_hash = hashlib.md5(f.read()).hexdigest()
 
-    doc = Document(doc_id=file_path, extra_info={'file_hash': new_hash, 'source': file_path})
+    doc = Document(doc_id=file_path, extra_info={'doc_id': new_hash, 'source': file_path})
 
     reingest = index_manager.refresh_index([doc])
 

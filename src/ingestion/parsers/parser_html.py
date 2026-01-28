@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup, Tag
 import html2text
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo
-from src.ingestion.loaders import Blob
+from ingestion.loaders import Blob
 
 class HTMLParser(BaseReader):
     def __init__(self, remove_images: bool = True, remove_links: bool = False, custom_clean_rules: Optional[List[str]] = None):
@@ -270,8 +270,8 @@ class HTMLParser(BaseReader):
         
         # 检查当前行是否已经是完整的块（单行块）
         current_line = lines[start_idx].strip()
-        if current_line.startswith(end_marker) and current_line.endswith(end_marker) and current_line != end_marker:
-            # 单行块，如 $$ content $$
+        # 单行块，如 $$ content $$
+        if current_line.startswith(end_marker) and current_line.rstrip().endswith(end_marker) and current_line != end_marker:
             return buffer, start_idx + 1
         
         # 从下一行开始找结束标记
@@ -340,10 +340,11 @@ class HTMLParser(BaseReader):
 
         node = TextNode(text=text, metadata=base_metadata)
         
-        # [Fix] 设置 Source 关系指向原始文件
+        # [Fix] 设置 Source 关系指向 doc_id（内容哈希）
+        doc_id = base_metadata.get("doc_id") or blob.source
         node.relationships[NodeRelationship.SOURCE] = RelatedNodeInfo(
-            node_id=blob.source,
-            metadata={"file_name": base_metadata.get("file_name")}
+            node_id=doc_id,
+            metadata={"file_name": base_metadata.get("file_name"), "source": blob.source}
         )
 
         return node

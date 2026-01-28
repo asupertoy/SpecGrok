@@ -2,10 +2,10 @@ import logging
 import os
 import hashlib
 from typing import List, Dict, Optional, Any, Union, Callable
-from llama_index.core import VectorStoreIndex, StorageContext, Document
+from llama_index.core import VectorStoreIndex, StorageContext, Document, Settings
 from llama_index.core.schema import BaseNode
-from src.models.embedding import get_embed_model
-from src.models.embedding import BgeM3Service
+from models.embedding import get_embed_model
+from models.embedding import BgeM3Service
 
 class IndexManager:
     """管理和操作向量存储索引的类。"""
@@ -31,8 +31,8 @@ class IndexManager:
         self.reingest_handler = reingest_handler
         self.predelete_before_upsert = predelete_before_upsert
 
-        # 获取嵌入模型
-        self.embed_model = get_embed_model()
+        # 获取嵌入模型；优先使用全局 Settings.embed_model（LlamaIndex BaseEmbedding），否则回退到本地 BGE 服务
+        self.embed_model = getattr(Settings, "embed_model", None) or get_embed_model()
         
         self.index: Optional[VectorStoreIndex] = None
         self._logger = logging.getLogger(__name__)
@@ -87,12 +87,15 @@ class IndexManager:
             # 如果 node.metadata 里没有 valid 的 file_hash，我们不应该在这里临时去读文件。
             pass
 
-            # 为了实现幂等 upsert：为每个 Node 生成确定性的 node_id（基于 source 和文本内容的 hash）
+            # 设置 ref_doc_id 为 doc_id（哈希）
+            n._ref_doc_id = n.metadata.get('doc_id')
+
+            # 为了实现幂等 upsert：为每个 Node 生成确定性的 node_id（基于 doc_id 和文本内容的 hash）
             try:
-                source = n.metadata.get('source', '') or n.metadata.get('file_name', '')
+                doc_id = n.metadata.get('doc_id', '')
                 # 使用文本内容的 hash 来确保稳定性
                 content_hash = hashlib.md5((n.text or '').encode('utf-8')).hexdigest()
-                node_key = f"{source}|{content_hash}"
+                node_key = f"{doc_id}|{content_hash}"
                 # 始终覆盖 node_id，保证在多次运行中稳定一致（接受显式覆盖的例外可在未来添加）
                 n.node_id = hashlib.md5(node_key.encode('utf-8')).hexdigest()
             except Exception:
@@ -131,8 +134,8 @@ class IndexManager:
         增量同步（支持 Document 或 TextNode）：
 
         支持两种输入类型：
-          - Document: 按 document-level 的 hash/source 做比较（behavior 同之前）。
-          - BaseNode (例如 TextNode): 将传入的节点按其 metadata['source'] 聚合为文档级别，基于聚合内容计算 hash 并比较。
+          - Document: 按 document-level 的 hash/id 做比较（behavior 同之前）。
+          - BaseNode (例如 TextNode): 将传入的节点按其 metadata['doc_id'] 聚合为文档级别，基于 doc_id 比较。
 
         返回：需要重新注入的 doc_id 列表（调用者负责用 Parser/Chunking 对该 doc 重新入库）。
         """
@@ -148,7 +151,7 @@ class IndexManager:
                 ds = None
 
             # 将输入按类型分流
-            # 文档级输入直接处理；Node 输入需要先聚合（按 source）
+            # 文档级输入直接处理；Node 输入需要先聚合（按 doc_id）
             doc_items: List[Document] = []
             node_groups: Dict[str, List[BaseNode]] = {}
 
@@ -162,18 +165,18 @@ class IndexManager:
                 if isinstance(it, BaseNode) or hasattr(it, 'text'):
                     src = None
                     try:
-                        src = it.metadata.get('source')
+                        src = it.metadata.get('doc_id')
                     except Exception:
                         src = None
                     if not src:
-                        # 尝试用 file_name 或 ref_doc_id 回退
+                        # 尝试用 ref_doc_id 回退
                         try:
-                            src = it.metadata.get('ref_doc_id') or it.metadata.get('file_name')
+                            src = it.metadata.get('ref_doc_id')
                         except Exception:
                             src = None
                     if not src:
                         # 无法确定归属文档，跳过并记录
-                        self._logger.debug('Node without source/ref_doc_id; skipping for refresh.')
+                        self._logger.debug('Node without doc_id/ref_doc_id; skipping for refresh.')
                         continue
                     node_groups.setdefault(src, []).append(it)
                     continue
@@ -196,7 +199,7 @@ class IndexManager:
                     incoming_hash = None
                     try:
                         extra = getattr(doc, 'extra_info', None) or getattr(doc, 'metadata', None) or {}
-                        incoming_hash = (extra.get('file_hash') if isinstance(extra, dict) else None) or (extra.get('hash') if isinstance(extra, dict) else None)
+                        incoming_hash = (extra.get('doc_id') if isinstance(extra, dict) else None) or (extra.get('hash') if isinstance(extra, dict) else None)
                     except Exception:
                         incoming_hash = None
 
@@ -221,7 +224,7 @@ class IndexManager:
                             if stored is not None:
                                 s_extra = getattr(stored, 'extra_info', None) or getattr(stored, 'metadata', None) or {}
                                 if isinstance(s_extra, dict):
-                                    stored_hash = s_extra.get('file_hash') or s_extra.get('hash')
+                                    stored_hash = s_extra.get('doc_id') or s_extra.get('hash')
                         except Exception:
                             stored_hash = None
 
@@ -237,19 +240,15 @@ class IndexManager:
                             self._logger.warning(f'Failed to delete old doc {doc_id}: {e}')
                         reingest_doc_ids.append(doc_id)
 
-            # 处理 Node 分组（按 source）
+            # 处理 Node 分组（按 doc_id）
             if node_groups:
                 self._logger.debug(f'Processing {len(node_groups)} node groups for refresh...')
                 for src, nodes in node_groups.items():
-                    # 使用 source 路径或 src 本身作为 doc_id
+                    # 使用 doc_id 作为 doc_id
                     doc_id = src
 
-                    # 计算 group 的内容 hash（基于文本内容的稳定 concat）
-                    try:
-                        concatenated = '\n'.join([n.get_content(metadata_mode='embed') for n in nodes])
-                        incoming_hash = hashlib.md5(concatenated.encode('utf-8')).hexdigest()
-                    except Exception:
-                        incoming_hash = None
+                    # 使用 doc_id 作为 incoming_hash（因为 doc_id 是内容 hash）
+                    incoming_hash = doc_id
 
                     stored_hash = None
                     if ds is not None and doc_id is not None:
@@ -266,13 +265,9 @@ class IndexManager:
                             if stored is not None:
                                 s_extra = getattr(stored, 'extra_info', None) or getattr(stored, 'metadata', None) or {}
                                 if isinstance(s_extra, dict):
-                                    stored_hash = s_extra.get('file_hash') or s_extra.get('hash')
+                                    stored_hash = s_extra.get('doc_id') or s_extra.get('hash')
                         except Exception:
                             stored_hash = None
-
-                    if incoming_hash is None:
-                        self._logger.debug(f'Could not compute incoming hash for source={src}; skipping.')
-                        continue
 
                     if stored_hash != incoming_hash:
                         self._logger.info(f'Detected change for doc_id={doc_id} (stored={stored_hash} incoming={incoming_hash}). Scheduling reingest.')
@@ -305,8 +300,8 @@ class IndexManager:
     def _default_reingest_handler(self, doc_ids: List[str]) -> None:
         """默认 reingest handler：创建 IngestionPipelineWrapper 并对每个 doc_id 调用 run("""
         try:
-            from src.config import settings as _settings
-            from src.ingestion.pipeline import IngestionPipelineWrapper
+            from config import settings as _settings
+            from ingestion.pipeline import IngestionPipelineWrapper
             import time
 
             pipeline = IngestionPipelineWrapper(index_manager=self)
@@ -366,8 +361,8 @@ class IndexManager:
 
         # 1) 尝试读取 Qdrant 底层统计（尽早获取以便 fallback）
         try:
-            from src.database.qdrant_manager import qdrant_manager
-            from src.config import settings
+            from database.qdrant_manager import qdrant_manager
+            from config import settings
 
             client = qdrant_manager.get_client()
             collection_name = settings.QDRANT_COLLECTION_NAME
@@ -479,4 +474,38 @@ class IndexManager:
                 node.embedding = dense_vecs[i]
         else:
             self._logger.error("Embedding generation failed: count mismatch or empty result.")
+    
+    def get_index_stats(self) -> Dict[str, Any]:
+        """
+        获取索引统计信息。
+        
+        Returns:
+            Dict[str, Any]: 包含 total_nodes 和 backend 信息的字典
+        """
+        try:
+            if self.index is None:
+                return {"total_nodes": "Unknown", "backend": "Unknown"}
+            
+            # 获取向量存储统计
+            vector_store = self.storage_context.vector_store
+            if hasattr(vector_store, 'client'):
+                # Qdrant 向量存储
+                client = vector_store.client
+                collection_name = getattr(vector_store, 'collection_name', 'Unknown')
+                
+                if client.collection_exists(collection_name):
+                    collection_info = client.get_collection(collection_name)
+                    total_points = collection_info.points_count
+                    return {
+                        "total_nodes": total_points,
+                        "backend": f"Qdrant ({collection_name})"
+                    }
+                else:
+                    return {"total_nodes": 0, "backend": f"Qdrant ({collection_name} - not found)"}
+            else:
+                return {"total_nodes": "Unknown", "backend": "Unknown"}
+                
+        except Exception as e:
+            self._logger.error(f"Failed to get index stats: {e}")
+            return {"total_nodes": "Unknown", "backend": "Unknown"}
     

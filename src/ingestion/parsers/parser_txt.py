@@ -6,7 +6,7 @@ from pathlib import Path
 
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo
-from src.ingestion.loaders import Blob
+from ingestion.loaders import Blob
 
 
 class TextParser(BaseReader):
@@ -423,12 +423,13 @@ class TextParser(BaseReader):
 
         node = TextNode(text=text, metadata=base_metadata)
         
-        # [Fix] 设置 Source 关系指向原始文件 (blob.source)
-        # 这确保了后续 Chunking 阶段生成的子节点能通过 ref_doc_id 关联回文件路径，
-        # 从而保证 IndexManager.delete_by_doc_id(path) 能正确删除相关向量。
+        # [Fix] 设置 Source 关系指向 doc_id（内容哈希）
+        # 这确保了后续 Chunking 阶段生成的子节点能通过 ref_doc_id 关联回 doc_id，
+        # 从而保证 IndexManager.delete_by_doc_id(doc_id) 能正确删除相关向量。
+        doc_id = base_metadata.get("doc_id") or blob.source
         node.relationships[NodeRelationship.SOURCE] = RelatedNodeInfo(
-            node_id=blob.source,
-            metadata={"file_name": base_metadata.get("file_name")}
+            node_id=doc_id,
+            metadata={"file_name": base_metadata.get("file_name"), "source": blob.source}
         )
         
         return node

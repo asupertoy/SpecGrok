@@ -1,0 +1,133 @@
+HTML 解析测试结果
+==================================================
+总节点数: 12
+
+节点 0:
+  文本: # 复杂HTML文档测试
+
+
+  * 介绍
+  * 内容
+  * 代码...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '复杂HTML文档测试', 'section_path': '复杂HTML文档测试', 'level': 1, 'source': 'complex_test.html'}
+
+节点 1:
+  文本: ## 引言
+
+
+这是文档的**引言部分** ，包含 _斜体_ 和`内联代码`。
+
+> 这是一个引用块，包含多行内容。
+> 
+> 第二行引用内容。...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '引言', 'section_path': '复杂HTML文档测试 > 引言', 'level': 2, 'source': 'complex_test.html'}
+
+节点 2:
+  文本: ## 主要内容...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '主要内容', 'section_path': '复杂HTML文档测试 > 主要内容', 'level': 2, 'source': 'complex_test.html'}
+
+节点 3:
+  文本: ### 列表部分
+
+
+  * 顶级项目1
+  * 顶级项目2 
+    * 子项目2.1
+    * 子项目2.2 
+      * 深层子项目2.2.1
+  * 顶级项目3...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '列表部分', 'section_path': '复杂HTML文档测试 > 主要内容 > 列表部分', 'level': 3, 'source': 'complex_test.html'}
+
+节点 4:
+  文本: ### 有序列表
+
+
+  1. 第一项
+  2. 第二项 
+    1. 子项2.1
+    2. 子项2.2...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '有序列表', 'section_path': '复杂HTML文档测试 > 主要内容 > 有序列表', 'level': 3, 'source': 'complex_test.html'}
+
+节点 5:
+  文本: ### 表格示例
+
+
+| 功能 | 描述 | 状态 | | --- | --- | --- | | 解析HTML | 将HTML转换为结构化文本 | 完成 | | 提取元数据 | 从head标签提取信息 | 完成 | | 块保护 | 防止在代码块中误切分 | 进行中 |...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '表格示例', 'section_path': '复杂HTML文档测试 > 主要内容 > 表格示例', 'level': 3, 'source': 'complex_test.html'}
+
+节点 6:
+  文本: ### 图片和链接
+
+
+查看这个[外部链接](https://example.com)和。
+
+还有一个内部锚点链接。...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '图片和链接', 'section_path': '复杂HTML文档测试 > 主要内容 > 图片和链接', 'level': 3, 'source': 'complex_test.html'}
+
+节点 7:
+  文本: ## 代码示例...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '代码示例', 'section_path': '复杂HTML文档测试 > 代码示例', 'level': 2, 'source': 'complex_test.html'}
+
+节点 8:
+  文本: ### Python代码块
+
+    
+    
+    def complex_function(data, threshold=0.5):
+        # 这是一个复杂的函数
+        filtered = [item for item in data if item.get('score', 0) > threshold]
+        
+        # 统计分析
+     ...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': 'Python代码块', 'section_path': '复杂HTML文档测试 > 代码示例 > Python代码块', 'level': 3, 'source': 'complex_test.html'}
+
+节点 9:
+  文本: ### JavaScript代码块
+
+    
+    
+    class DataProcessor {
+        constructor(config) {
+            this.config = config;
+            // ## 这也不是标题
+        }
+    
+        async process(data) {
+           ...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': 'JavaScript代码块', 'section_path': '复杂HTML文档测试 > 代码示例 > JavaScript代码块', 'level': 3, 'source': 'complex_test.html'}
+
+节点 10:
+  文本: ### 数学公式
+
+
+内联公式：$E = mc^2$ 是质能方程。
+
+块级公式：
+
+$$ rac{d}{dx} \int_a^x f(t) \, dt = f(x)$$
+
+$$\lim_{x o 0} rac{\sin x}{x} = 1$$
+
+矩阵：
+
+$$egin{pmatrix} a & b \ c & d \end{pmatrix} egin{pmatrix} x \ y \end{p...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '数学公式', 'section_path': '复杂HTML文档测试 > 代码示例 > 数学公式', 'level': 3, 'source': 'complex_test.html'}
+
+节点 11:
+  文本: ## 结论
+
+
+本文档演示了HTML解析器的各种复杂特性：
+
+  * 多级标题嵌套
+  * 复杂列表结构
+  * 表格转换
+  * 代码块保护
+  * 数学公式处理
+  * 元数据提取
+
+
+
+© 2024 测试文档...
+  元数据: {'domain': None, 'file_name': 'complex_test.html', 'title': '复杂HTML文档测试', 'viewport': 'width=device-width, initial-scale=1.0', 'description': '这是一个用于测试HTML解析器的复杂文档', 'keywords': 'HTML,解析,测试,复杂文档', 'section_header': '结论', 'section_path': '复杂HTML文档测试 > 结论', 'level': 2, 'source': 'complex_test.html'}
+
